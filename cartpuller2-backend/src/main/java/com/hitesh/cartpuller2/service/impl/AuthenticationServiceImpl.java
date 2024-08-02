@@ -16,6 +16,7 @@ import com.hitesh.cartpuller2.user.dto.JwtAuthenticationResponse;
 import com.hitesh.cartpuller2.user.dto.LoginRequest;
 import com.hitesh.cartpuller2.user.dto.RefreshTokenRequest;
 import com.hitesh.cartpuller2.user.dto.SignUpRequest;
+import com.hitesh.cartpuller2.user.exception.UserAlreadyExistsException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +30,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public User signUp(SignUpRequest signUpRequest) {
+
+        signUpRequest.setEmail(signUpRequest.getEmail().toLowerCase());
+
+        if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("User already exists");
+        }
+
         User user = new User(signUpRequest.getEmail());
 
         user.setHashedPassword(passwordEncoder.encode(signUpRequest.getPassword()));
@@ -45,6 +53,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     public JwtAuthenticationResponse login(LoginRequest loginRequest) {
+
+        loginRequest.setEmail(loginRequest.getEmail().toLowerCase());
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
