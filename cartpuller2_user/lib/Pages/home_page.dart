@@ -1,4 +1,6 @@
+import 'package:cartpuller2_user/API_calls/order_post.dart';
 import 'package:cartpuller2_user/API_calls/vegetable.dart';
+import 'package:cartpuller2_user/Custom_exceptions/empty_cart.dart';
 import 'package:cartpuller2_user/Custom_exceptions/invalid_token.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev;
@@ -11,9 +13,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  ScrollController _scrollController = ScrollController();
   Future<List<Vegetable>> _products = getVegetables();
+  List<Vegetable>? _veggieList;
   Map<String, int> cartItems = {}; //productId : quantity
   int count = 0;
+
+  @override
+  void dispose() {
+    super.dispose();
+    _scrollController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,75 +32,86 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           title: const Text("Cartpuller"),
         ),
-        body: FutureBuilder(
-          future: _products,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final List<Vegetable> vegetableList = snapshot.data!;
-              return ListView.builder(
-                itemCount: vegetableList.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(vegetableList[index].title!),
-                    subtitle: Text(vegetableList[index].price!.toString()),
-                    trailing: Wrap(
-                      children: [
-                        IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _addItemToCart(vegetableList[index].id!);
-                              });
-                            },
-                            icon: const Icon(Icons.add)),
-                        SizedBox(
-                            width: 50,
-                            height: 50,
-                            child: Center(
-                              child: Text(
-                                getQuantityFromCart(vegetableList[index].id!),
-                                style: const TextStyle(fontSize: 20),
-                                textAlign: TextAlign.center,
-                              ),
-                            )),
-                        IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _removeItemFromCart(vegetableList[index].id!);
-                              });
-                            },
-                            icon: const Icon(Icons.remove)),
-                      ],
-                    ),
+        body: Column(
+          children: [
+            FutureBuilder(
+              future: _products,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  _veggieList = snapshot.data!;
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _veggieList?.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(_veggieList![index].title!),
+                        subtitle: Text(_veggieList![index].price!.toString()),
+                        trailing: Wrap(
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _addItemToCart(_veggieList![index].id!);
+                                  });
+                                },
+                                icon: const Icon(Icons.add)),
+                            SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: Center(
+                                  child: Text(
+                                    getQuantityFromCart(
+                                        _veggieList![index].id!),
+                                    style: const TextStyle(fontSize: 20),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _removeItemFromCart(
+                                        _veggieList![index].id!);
+                                  });
+                                },
+                                icon: const Icon(Icons.remove)),
+                          ],
+                        ),
+                      );
+                    },
                   );
-                },
-              );
-            } else if (snapshot.hasError) {
-              if (snapshot.error is InvalidTokenException) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                    (_) => Navigator.of(context).popAndPushNamed('/login'));
-                return const Text("");
-              } else {
-                return Column(
-                  children: [
-                    Center(
-                      child: Text("Error ${snapshot.error.toString()}"),
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          setState(() {
-                            //use set state to refresh
-                            count++;
-                            _products = getVegetables();
-                          });
-                        },
-                        child: const Text("Reload"))
-                  ],
-                );
-              }
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
+                } else if (snapshot.hasError) {
+                  if (snapshot.error is InvalidTokenException) {
+                    WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => Navigator.of(context).popAndPushNamed('/login'));
+                    return const Text("");
+                  } else {
+                    return Column(
+                      children: [
+                        Center(
+                          child: Text("Error ${snapshot.error.toString()}"),
+                        ),
+                        TextButton(
+                            onPressed: () {
+                              setState(() {
+                                //use set state to refresh
+                                count++;
+                                _products = getVegetables();
+                              });
+                            },
+                            child: const Text("Reload"))
+                      ],
+                    );
+                  }
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 500),
+              child: _getCheckoutWidget(),
+            )
+          ],
         ));
   }
 
@@ -121,6 +142,67 @@ class _HomePageState extends State<HomePage> {
       cartItems.remove(productId);
     } else {
       cartItems[productId] = existingQty - 1;
+    }
+  }
+
+  Widget _getCheckoutWidget() {
+    return SizedBox(
+      height: 60,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Center(child: Text(_getTotal())),
+          Center(
+              child: TextButton(
+                  onPressed: () => _handleCheckout(context),
+                  child: const Text("Checkout")))
+        ],
+      ),
+    );
+  }
+
+  String _getTotal() {
+    if (cartItems.isEmpty || _veggieList == null) {
+      return "";
+    } else {
+      int total = 0;
+      for (String productId in cartItems.keys) {
+        for (Vegetable veggie in _veggieList!) {
+          if (veggie.id == productId) {
+            total += (veggie.price! * cartItems[productId]!);
+          }
+        }
+      }
+      return total.toString();
+    }
+  }
+
+  Future<void> _handleCheckout(BuildContext context) async {
+    try {
+      Order order = await postOrder(cartItems);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Order id: ${order.id}")));
+      }
+      setState(() {
+        cartItems = {};
+      });
+    } catch (e) {
+      if (e is EmptyCartException && context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      } else if (e is InvalidTokenException && context.mounted) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
+          Navigator.of(context).popAndPushNamed('/login');
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
+        }
+      }
     }
   }
 }

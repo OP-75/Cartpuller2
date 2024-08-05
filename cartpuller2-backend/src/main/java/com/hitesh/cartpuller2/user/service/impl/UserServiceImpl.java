@@ -1,6 +1,5 @@
 package com.hitesh.cartpuller2.user.service.impl;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    // @Cacheable(value = "user", key = "#email") //shouldnt cache this
+    // @Cacheable(value = "user", key = "#email") // shouldnt cache this
     public UserDetails getUserByEmail(String email) {
 
         return userRepository.findByEmail(email)

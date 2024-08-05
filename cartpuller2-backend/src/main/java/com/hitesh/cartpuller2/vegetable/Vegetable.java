@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data // ! Imp! You have to put this annotation so that spring can return a valid non-
       // empty json (it creates all the getter, constructor, etc, read more online)

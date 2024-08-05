@@ -1,20 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:cartpuller2_user/API_calls/Helper_functions/get_auth_token.dart';
 import 'package:cartpuller2_user/Custom_exceptions/invalid_token.dart';
 import 'package:cartpuller2_user/constants.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as dev;
 
 Future<List<Vegetable>> getVegetables() async {
   try {
-    const storage = FlutterSecureStorage();
-    String? token = await storage.read(key: TOKEN);
-
-    if (token == null) {
-      throw const InvalidTokenException("Please Login");
-    }
+    String token = await getAuthToken();
 
     final response = await http.get(
       Uri.parse('$SERVER_URL/api/all-vegetables'),
@@ -24,7 +19,7 @@ Future<List<Vegetable>> getVegetables() async {
       },
     );
 
-    if (response.statusCode == 403 || response.body.isEmpty) {
+    if (response.statusCode == 403) {
       dev.log(
           "Vegetables API call response code: ${response.statusCode.toString()}");
       throw const InvalidTokenException("Please Login");
