@@ -3,33 +3,42 @@ package com.hitesh.cartpuller2.user;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hitesh.cartpuller2.service.AuthenticationService;
 import com.hitesh.cartpuller2.user.dto.JwtAuthenticationResponse;
 import com.hitesh.cartpuller2.user.dto.LoginRequest;
 import com.hitesh.cartpuller2.user.dto.RefreshTokenRequest;
 import com.hitesh.cartpuller2.user.dto.SignUpRequest;
+import com.hitesh.cartpuller2.user.service.AuthenticationService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+//!this only does authentication work
+
 @RestController
 @RequiredArgsConstructor // constructor for dependency injection
-@RequestMapping("/api/user")
+@RequestMapping("/api/auth")
 public class UserController {
 
     private final AuthenticationService authenticationService;
 
-    @PostMapping("/auth/signup")
+    @PostMapping("/signup-customer")
     public ResponseEntity<User> signUp(@RequestBody SignUpRequest signUpRequest) {
-        // TODO: Add Role here before passing when role based auth is done
-        User user = authenticationService.signUp(signUpRequest);
+        User user = authenticationService.signUpCustomer(signUpRequest);
         user.setHashedPassword(null);
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/signup-cartpuller")
+    public ResponseEntity<User> signUpCartpuller(@RequestBody SignUpRequest signUpRequest) {
+        User user = authenticationService.signUpCartpuller(signUpRequest);
+        user.setHashedPassword(null);
+        return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/login")
     public ResponseEntity<JwtAuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
 
         return ResponseEntity.ok(authenticationService.login(loginRequest));

@@ -2,11 +2,14 @@ package com.hitesh.cartpuller2.user;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.Data;
@@ -17,22 +20,25 @@ import lombok.Data;
 public class User implements Serializable, UserDetails {
     // implement Serializable for redis caching
 
-    // TODO: need to have roles for customer, rider, seller
-
     @MongoId
     String id;
 
-    final String email;
-    String hashedPassword;
-    String name;
-    String phoneNumber;
-    String Address;
-    String longitude;
-    String latitude;
+    private final String email;
+    private String hashedPassword;
+    private String name;
+    private String phoneNumber;
+    private String Address;
+    private String longitude;
+    private String latitude;
+    private Set<Role> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+        this.getRoles().forEach(role -> {
+            authorities.add(new SimpleGrantedAuthority(role.name()));
+        });
+        return authorities;
     }
 
     @Override

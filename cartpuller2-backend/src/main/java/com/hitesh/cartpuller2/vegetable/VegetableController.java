@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/customer")
 public class VegetableController {
 
     private final VegetableService vegetableService;

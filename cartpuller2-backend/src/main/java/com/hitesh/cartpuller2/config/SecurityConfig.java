@@ -16,7 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.hitesh.cartpuller2.user.UserService;
+import com.hitesh.cartpuller2.user.Role;
+import com.hitesh.cartpuller2.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,13 +33,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((request) -> request
-                        .requestMatchers("/api/auth/**", "/api/user/auth/signup", "/api/user/auth/login",
-                                "/api/user/auth/**", "/api/user/ping")
-                        .permitAll()
-                        // .requestMatchers("/api/user").hasAnyAuthority(Role.USER.name())
-                        // .requestMatchers("/api/rider").hasAnyAuthority(Role.RIDER.name())
-                        // .requestMatchers("/api/seller").hasAnyAuthority(Role.SELLER.name())
-                        // TODO: need to have roles for customer, rider, seller (the commented stuff)
+                        .requestMatchers("/api/auth/**", "/api/user/ping").permitAll()
+                        .requestMatchers("/api/customer/**").hasAnyAuthority(Role.CUSTOMER.name())
+                        .requestMatchers("/api/rider/**").hasAnyAuthority(Role.RIDER.name())
+                        .requestMatchers("/api/cartpuller/**").hasAnyAuthority(Role.CARTPULLER.name())
                         .anyRequest().authenticated())
                 .sessionManagement((manager) -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
