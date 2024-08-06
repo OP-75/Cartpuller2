@@ -1,6 +1,9 @@
 import 'package:cartpuller2_user/API_calls/signup_request.dart';
+import 'package:cartpuller2_user/Helper_functions/determine_user_position.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
+
+import 'package:geolocator/geolocator.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -20,6 +23,8 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    determinePosition();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -161,14 +166,16 @@ class _SignupPageState extends State<SignupPage> {
   void handleSignup(BuildContext context) async {
     _error = null;
 
+    Position currPosition = await determinePosition();
+
     Map<String, String> signupForm = {
       "email": emailController.text,
       "password": passwordController.text,
       "name": nameController.text,
       "phoneNumber": phoneNumberController.text,
       "address": addressController.text,
-      "longitude": "6.9",
-      "latitude": "6.9"
+      "longitude": currPosition.longitude.toString(),
+      "latitude": currPosition.latitude.toString(),
     };
 
     try {

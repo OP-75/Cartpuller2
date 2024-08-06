@@ -38,6 +38,7 @@ dependencies:
   http: ^1.2.0
   flutter_secure_storage: ^9.2.2
   scroll_to_hide: ^2.1.0
+  geolocator: ^11.1.0
 
 dev_dependencies:
   flutter_test:

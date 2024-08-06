@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:cartpuller2_user/API_calls/Helper_functions/get_auth_token.dart';
+import 'package:cartpuller2_user/Helper_functions/get_auth_token.dart';
 import 'package:cartpuller2_user/Custom_exceptions/empty_cart.dart';
 import 'package:cartpuller2_user/Custom_exceptions/invalid_token.dart';
 import 'package:cartpuller2_user/constants.dart';
