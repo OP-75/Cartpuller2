@@ -15,7 +15,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    // @Cacheable(value = "user", key = "#email") // shouldnt cache this
+    // shouldnt cache this
     public UserDetails getUserByEmail(String email) {
 
         return userRepository.findByEmail(email)

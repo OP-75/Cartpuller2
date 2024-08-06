@@ -1,4 +1,4 @@
-sudo service redis-server restart
+sudo service redis-server start
 redis-cli
 flushall (inside redis cli)
 monitor (inside redis cli)
