@@ -23,4 +23,8 @@ public class Order implements Serializable {
     private String riderEmail;
     private String cartpullerEmail;
 
+    private String deliveryAddress;
+    private String deliveryLatitude;
+    private String deliveryLongitude;
+
 }

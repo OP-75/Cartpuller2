@@ -48,7 +48,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        UserDetailsService userDetailsService = (email) -> userService.getUserByEmail(email); // weird ass method
+        UserDetailsService userDetailsService = (email) -> userService.getUserDetailsByEmail(email); // weird ass method
         authenticationProvider.setUserDetailsService(userDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
         return authenticationProvider;

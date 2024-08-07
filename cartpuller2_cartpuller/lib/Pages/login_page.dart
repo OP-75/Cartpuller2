@@ -28,7 +28,7 @@ class LoginPage extends StatelessWidget {
                 padding: EdgeInsets.only(top: 110.0),
                 child: Center(
                   child: SizedBox(
-                    width: 200,
+                    width: 300,
                     height: 100,
                     child: Center(
                         child: Text(

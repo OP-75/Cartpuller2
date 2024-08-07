@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 Future<Token> login(Map<String, String> loginForm) async {
   try {
     final response = await http.post(
-      Uri.parse('$SERVER_URL/api/user/auth/login'),
+      Uri.parse('$SERVER_URL/api/auth/login'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

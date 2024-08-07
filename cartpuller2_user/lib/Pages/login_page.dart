@@ -126,6 +126,8 @@ class LoginPage extends StatelessWidget {
               SnackBar(content: Text("Error: ${responseTokens.error}")));
         }
       } else {
+        await storage.delete(key: TOKEN);
+        await storage.delete(key: REFRESH_TOKEN);
         // Write JWT in storage
         await storage.write(key: TOKEN, value: responseTokens.accessToken);
         await storage.write(

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 Future<Map<String, dynamic>> signup(Map<String, String> signupForm) async {
   try {
     final response = await http.post(
-      Uri.parse('$SERVER_URL/api/user/auth/signup'),
+      Uri.parse('$SERVER_URL/api/auth/signup-cartpuller'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

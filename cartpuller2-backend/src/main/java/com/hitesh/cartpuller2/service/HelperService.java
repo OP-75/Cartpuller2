@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class Helper {
+public class HelperService {
 
     private final JwtService jwtService;
 

@@ -29,6 +29,7 @@ public class AuthenticationService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
@@ -92,8 +93,7 @@ public class AuthenticationService {
         log.debug("Auth complete: " + loginRequest.toString());
 
         String email = loginRequest.getEmail();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User with email:" + email + " not found"));
+        User user = userService.getUserByEmail(email);
 
         String jwt = jwtService.genrateTokenMethod(user);
         String refreshToken = jwtService.genrateRefreshTokenMethod(new HashMap<>(), user);

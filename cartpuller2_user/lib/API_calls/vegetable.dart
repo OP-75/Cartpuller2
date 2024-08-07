@@ -12,7 +12,7 @@ Future<List<Vegetable>> getVegetables() async {
     String token = await getAuthToken();
 
     final response = await http.get(
-      Uri.parse('$SERVER_URL/api/all-vegetables'),
+      Uri.parse('$SERVER_URL/api/customer/all-vegetables'),
       headers: <String, String>{
         HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
         HttpHeaders.authorizationHeader: 'Bearer $token',

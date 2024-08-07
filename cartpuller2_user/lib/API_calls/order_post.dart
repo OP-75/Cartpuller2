@@ -18,7 +18,7 @@ Future<Order> postOrder(Map<String, int> cartItems) async {
     }
 
     final response =
-        await http.post(Uri.parse('$SERVER_URL/api/order/user-order'),
+        await http.post(Uri.parse('$SERVER_URL/api/customer/order'),
             headers: <String, String>{
               HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
               HttpHeaders.authorizationHeader: 'Bearer $token',
