@@ -1,36 +1,24 @@
-package com.hitesh.cartpuller2.order;
+package com.hitesh.cartpuller2.cartpuller.dto;
 
-import java.util.*;
+import java.util.Map;
 
-import java.io.Serializable;
-
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-
+import com.hitesh.cartpuller2.order.OrderStatus;
 import com.hitesh.cartpuller2.vegetable.Vegetable;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@Document(collection = "Orders")
-public class Order implements Serializable {
-
+@AllArgsConstructor
+public class OrderDto {
     @Id
     @MongoId
     private String id;
 
     private Map<String, Integer> orderDetails; // vegetable id - quantity, map
     private Map<String, Vegetable> vegetableDetailMap; // vegetable id - obj, map, we get this internally
-
-    private String customerEmail;
     private OrderStatus orderStatus;
-
-    private String riderEmail;
-    private String cartpullerEmail;
-
-    private String deliveryAddress;
-    private String deliveryLatitude;
-    private String deliveryLongitude;
 
 }

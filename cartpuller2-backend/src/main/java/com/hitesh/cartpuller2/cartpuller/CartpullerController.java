@@ -1,12 +1,16 @@
 package com.hitesh.cartpuller2.cartpuller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hitesh.cartpuller2.cartpuller.dto.Location;
+import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,11 @@ public class CartpullerController {
     public ResponseEntity<String> updateLocation(@RequestBody Location location, HttpServletRequest request) {
         cartpullerService.updateCartpullerLocation(location, request);
         return ResponseEntity.ok("Ok");
+    }
+
+    @GetMapping("/orders")
+    public ResponseEntity<List<OrderDto>> getOrders() {
+        return ResponseEntity.ok(cartpullerService.getOrders());
     }
 
 }

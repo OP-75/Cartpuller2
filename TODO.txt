@@ -1,0 +1,4 @@
+Implement Caching for Updating (CachePut) Cartpuller & Rider location as well as for Getting them (Cache)
+
+Add API paths like /api/customer/validateToken, /api/cartpuller/validateToken, /api/rider/validateToken, to check validity of token on login page so we dont have to request the token again and again
+Also write logic for this in app

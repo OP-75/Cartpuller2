@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import com.mongodb.lang.NonNull;
@@ -14,6 +15,7 @@ import lombok.Data;
 @Document(collection = "Active_Cartpullers")
 public class ActiveCartpuller implements Serializable {
 
+    @Id
     @MongoId
     private String id;
 

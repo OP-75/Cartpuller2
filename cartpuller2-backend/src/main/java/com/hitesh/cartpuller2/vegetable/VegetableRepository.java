@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface VegetableRepository extends MongoRepository<Vegetable, String> {
     // we automatically get findAll method from MongoRepository
-
 }

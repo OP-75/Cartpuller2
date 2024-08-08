@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,6 +21,7 @@ import lombok.Data;
 public class User implements Serializable, UserDetails {
     // implement Serializable for redis caching
 
+    @Id
     @MongoId
     String id;
 

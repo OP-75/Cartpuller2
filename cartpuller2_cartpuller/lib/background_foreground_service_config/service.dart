@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:developer' as dev;
 
+import 'package:cartpuller2_cartpuller/API_calls/update_location.dart';
 import 'package:cartpuller2_cartpuller/Helper_functions/determine_user_position.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
@@ -37,20 +38,44 @@ void onStart(ServiceInstance service) async {
       service.setAsBackgroundService();
     });
   }
-  service.on('stopService').listen((event) {
-    service.stopSelf();
+  service.on('stopService').listen((event) async {
+    await service.stopSelf();
   });
-
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
 
   Timer.periodic(const Duration(seconds: 1), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
-        Position pos = await determinePosition();
-
-        dev.log(pos.toString());
+        //TODO: can use geolocator here to send location every time position changes by 100m instead of every second
+        try {
+          Position pos = await determinePosition();
+          Map<String, String> location = {
+            "latitude": pos.latitude.toString(),
+            "longitude": pos.longitude.toString(),
+          };
+          await sendCartpullerLocation(location);
+          dev.log(pos.toString());
+        } catch (e) {
+          // if we get an exception (like "cartpuller is inactive" exception then stop the service)
+          try {
+            await service.stopSelf();
+            dev.log(
+                "sendCartpullerLocation exception: ${e.toString()}, shutting down foreground service");
+          } catch (serviceException) {
+            dev.log(
+                "service.stopSelf exception: ${serviceException.toString()}");
+          }
+        }
       }
     }
   });
+}
+
+Future<void> startBackgroundService() async {
+  final service = FlutterBackgroundService();
+  await service.startService();
+}
+
+void stopBackgroundService() {
+  final service = FlutterBackgroundService();
+  service.invoke("stop");
 }

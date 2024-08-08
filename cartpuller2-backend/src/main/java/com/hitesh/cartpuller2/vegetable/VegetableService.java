@@ -1,7 +1,6 @@
 package com.hitesh.cartpuller2.vegetable;
 
 import java.util.List;
-
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +16,11 @@ public class VegetableService {
     @Cacheable("all-vegetables")
     public List<Vegetable> getAllVegetables() {
         return repository.findAll();
+    }
+
+    @Cacheable(value = "vegetables", key = "#id")
+    public Vegetable getVegeableById(String id) {
+        return repository.findById(id).orElseThrow();
     }
 
 }
