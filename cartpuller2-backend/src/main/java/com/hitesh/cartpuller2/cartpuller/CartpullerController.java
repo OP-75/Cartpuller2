@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,8 +44,18 @@ public class CartpullerController {
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<List<OrderDto>> getOrders() {
-        return ResponseEntity.ok(cartpullerService.getOrders());
+    public ResponseEntity<List<OrderDto>> getOrders(HttpServletRequest request) {
+        return ResponseEntity.ok(cartpullerService.getOrdersIfActive(request));
+    }
+
+    @GetMapping("/past-accepted-orders")
+    public ResponseEntity<List<OrderDto>> getPastAcceptedOrders(HttpServletRequest request) {
+        return ResponseEntity.ok(cartpullerService.getCartpullerPastOrders(request));
+    }
+
+    @PostMapping("/accept-order/{orderId}")
+    public ResponseEntity<OrderDto> acceptCartpullerOrder(HttpServletRequest request, @PathVariable String orderId) {
+        return ResponseEntity.ok(cartpullerService.acceptOrderIfActive(request, orderId));
     }
 
 }

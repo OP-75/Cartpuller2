@@ -6,4 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface OrderRepository extends MongoRepository<Order, String> {
     List<Order> findByOrderStatus(OrderStatus orderStatus);
+
+    List<Order> findByCartpullerEmail(String cartpullerEmail);
 }

@@ -24,7 +24,7 @@ public class Order implements Serializable {
     private Map<String, Vegetable> vegetableDetailMap; // vegetable id - obj, map, we get this internally
 
     private String customerEmail;
-    private OrderStatus orderStatus;
+    private OrderStatus orderStatus; // enum
 
     private String riderEmail;
     private String cartpullerEmail;

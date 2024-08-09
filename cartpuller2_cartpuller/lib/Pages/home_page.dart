@@ -1,8 +1,15 @@
+import 'dart:async';
+
+import 'package:cartpuller2_cartpuller/API_calls/accept_order.dart';
 import 'package:cartpuller2_cartpuller/API_calls/activate_cartpuller.dart';
 import 'package:cartpuller2_cartpuller/API_calls/deactivate_cartpuller.dart';
 import 'package:cartpuller2_cartpuller/API_calls/get_orders.dart';
+import 'package:cartpuller2_cartpuller/API_calls/get_past_order.dart';
+import 'package:cartpuller2_cartpuller/API_calls/update_location.dart';
+import 'package:cartpuller2_cartpuller/Custom_exceptions/bad_request.dart';
 import 'package:cartpuller2_cartpuller/Custom_exceptions/inactive.dart';
 import 'package:cartpuller2_cartpuller/Custom_exceptions/invalid_token.dart';
+import 'package:cartpuller2_cartpuller/Custom_exceptions/order_already_accepted.dart';
 import 'package:cartpuller2_cartpuller/Helper_functions/determine_user_position.dart';
 import 'package:cartpuller2_cartpuller/background_foreground_service_config/service.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +28,15 @@ class _HomePageState extends State<HomePage> {
   bool _isStoreActive =
       false; //this is just a placeholder actual inital state is set by _checkAndSetStoreStatus
   Color _storeIconColor = Colors.red;
+
+  int _selectedIndex = 0;
   final service = FlutterBackgroundService();
+
+  //Timer for polling
+  Timer? _timer;
+
+  //Back list for when a user cancels order, it becomes everytime user closes the app
+  final Set<String> _blackList = {};
 
   @override
   void initState() {
@@ -29,6 +44,19 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndSetStoreStatus();
     });
+
+    //we need to do polling every X seconds to refresh available order,
+    //we can just use empty set state since the future builder in build()
+    // will make the call every time build is called
+    _timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer?.cancel();
   }
 
   @override
@@ -38,7 +66,7 @@ class _HomePageState extends State<HomePage> {
         title: const Text("Homepage"),
         actions: [
           IconButton(
-            onPressed: () => _toggleServiceStatus(),
+            onPressed: () => _toggleServiceStatus(context),
             icon: const Icon(Icons.store),
             color: _storeIconColor,
             iconSize: 35,
@@ -47,26 +75,46 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: FutureBuilder(
-        future: _fetchAvailableOrders(context),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return _ordersWidget(snapshot.data!);
-          } else if (snapshot.hasError) {
-            return Text(snapshot.error.toString());
-          } else {
-            return const CircularProgressIndicator();
-          }
-        },
+      body: _getWidgetOfSelectedIndex(_selectedIndex, context),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings_input_antenna), label: "Live order"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.library_books_outlined),
+              label: "Accepted Orders")
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _changeIndex,
       ),
     );
   }
 
-  Widget _ordersWidget(List<Map<String, dynamic>> _ordersList) {
+  Widget _liveOrderWidget(BuildContext context) {
+    return FutureBuilder(
+      future: _fetchAvailableOrders(context),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          List<Map<String, dynamic>> data = snapshot.data!;
+
+          //remove elements from black list
+          data.removeWhere((order) => _blackList.contains(order['id']));
+
+          return _ordersListView(data);
+        } else if (snapshot.hasError) {
+          return Text(snapshot.error.toString());
+        } else {
+          return const CircularProgressIndicator();
+        }
+      },
+    );
+  }
+
+  Widget _ordersListView(List<Map<String, dynamic>> ordersList) {
     return ListView.builder(
-        itemCount: _ordersList.length,
+        itemCount: ordersList.length,
         itemBuilder: (context, index) {
-          final currOrder = _ordersList[index];
+          final currOrder = ordersList[index];
 
           return Padding(
             padding: const EdgeInsets.all(8.0),
@@ -84,7 +132,8 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.all(12.0),
                         child: IconButton(
                             onPressed: () {
-                              _acceptOrder(currOrder['id']);
+                              String orderId = currOrder['id'];
+                              _acceptOrder(orderId, context);
                             },
                             icon: const Icon(Icons.check)),
                       ),
@@ -92,13 +141,54 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.all(12.0),
                           child: IconButton(
                               onPressed: () {
-                                //TODO write this logic, utilize a tmp black list to reject orders
+                                setState(() {
+                                  String orderId = currOrder['id'];
+                                  _blackList.add(orderId);
+                                });
                               },
                               icon: const Icon(Icons.cancel))),
                     ],
                   ),
                 )
               ]),
+            ),
+          );
+        });
+  }
+
+  Widget _pastOrderWidget(BuildContext context) {
+    return FutureBuilder(
+      future: _fetchPastOrders(context),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return _pastOrdersListView(snapshot.data!);
+        } else if (snapshot.hasError) {
+          return Text(snapshot.error.toString());
+        } else {
+          return const CircularProgressIndicator();
+        }
+      },
+    );
+  }
+
+  Widget _pastOrdersListView(List<Map<String, dynamic>> ordersList) {
+    return ListView.builder(
+        itemCount: ordersList.length,
+        itemBuilder: (context, index) {
+          final currOrder = ordersList[index];
+
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListTile(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.5)),
+              tileColor: currOrder['orderStatus'] == "ACCEPTED" ||
+                      currOrder['orderStatus'] == "RIDER_ASSIGNED"
+                  ? Colors.amber
+                  : Colors.grey[300],
+              title: Text(
+                  "Order ID: ${currOrder['id']}, Status = ${currOrder['orderStatus']}"),
+              subtitle: _buildTable(currOrder),
             ),
           );
         });
@@ -150,7 +240,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _toggleServiceStatus() async {
+  _toggleServiceStatus(BuildContext context) async {
     try {
       Position position = await determinePosition();
       Map<String, String> location = {
@@ -167,6 +257,7 @@ class _HomePageState extends State<HomePage> {
         });
       } else {
         await activateCartpuller(location);
+        await sendCartpullerLocation(location);
         startBackgroundService();
         setState(() {
           _isStoreActive = true;
@@ -182,21 +273,65 @@ class _HomePageState extends State<HomePage> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text("Error: ${e.message}")));
       } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
-        dev.log(e.toString());
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+        }
       }
+      dev.log(e.toString());
     }
   }
 
-  void _acceptOrder(currOrder) {
-    //TODO write this api & logic
+  Future<void> _acceptOrder(String id, BuildContext context) async {
+    try {
+      await acceptOrder(id);
+      setState(() {});
+    } on BadRequestException catch (e) {
+      dev.log(e.message);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                "${e.message}, try activating & deactivating your store from app if you are already active")));
+      }
+    } on OrderAlreadyAcceptedException catch (e) {
+      dev.log(e.message);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      dev.log(e.toString());
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
   }
 
   Future<List<Map<String, dynamic>>> _fetchAvailableOrders(
       BuildContext context) async {
     try {
       return getOrders();
+    } on InvalidTokenException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+        Navigator.of(context).popAndPushNamed('/login');
+      }
+      rethrow;
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchPastOrders(
+      BuildContext context) async {
+    try {
+      return getPastOrders();
     } on InvalidTokenException catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
@@ -224,5 +359,24 @@ class _HomePageState extends State<HomePage> {
         }
       });
     });
+  }
+
+  void _changeIndex(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Widget _getWidgetOfSelectedIndex(int index, BuildContext context) {
+    switch (_selectedIndex) {
+      case 0:
+        return _liveOrderWidget(context);
+      case 1:
+        //  return _loadAcceptedOrdersListView();
+        return _pastOrderWidget(context);
+      default:
+        return Text(
+            "_getWidgetOfSelectedIndex() Error: Index $index isnt know");
+    }
   }
 }

@@ -50,4 +50,20 @@ public class OrderService {
         return orderRepository.findByOrderStatus(status);
     }
 
+    public Order getByOrderId(String id) {
+        return orderRepository.findById(id).orElseThrow();
+    }
+
+    public List<Order> getOrderByCartpullerEmail(String cartpullerEmail) {
+        return orderRepository.findByCartpullerEmail(cartpullerEmail);
+    }
+
+    public Order updateOrder(Order newOrder) {
+        // since repository has no way to update order we will delete and then save new
+        // order
+        String orderId = newOrder.getId();
+        orderRepository.deleteById(orderId);
+        return orderRepository.save(newOrder);
+    }
+
 }

@@ -8,12 +8,12 @@ import 'package:cartpuller2_cartpuller/constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as dev;
 
-Future<List<Map<String, dynamic>>> getOrders() async {
+Future<List<Map<String, dynamic>>> getPastOrders() async {
   try {
     String token = await getAuthToken();
 
     final response = await http.get(
-      Uri.parse('$SERVER_URL/api/cartpuller/orders'),
+      Uri.parse('$SERVER_URL/api/cartpuller/past-accepted-orders'),
       headers: <String, String>{
         HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
         HttpHeaders.authorizationHeader: 'Bearer $token',
