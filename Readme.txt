@@ -1,0 +1,1 @@
+Making any changes related to flutter_background_services requires u to stop the app and run/rebuild it again. Hot reload & Hot restart dont work with it

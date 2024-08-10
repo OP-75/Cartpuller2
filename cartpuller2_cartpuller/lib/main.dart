@@ -2,7 +2,6 @@ import 'package:cartpuller2_cartpuller/Pages/login_page.dart';
 import 'package:cartpuller2_cartpuller/background_foreground_service_config/service.dart';
 import 'package:cartpuller2_cartpuller/routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

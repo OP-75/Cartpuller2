@@ -81,6 +81,28 @@ public class AuthenticationService {
 
     }
 
+    public User signUpRider(SignUpRequest signUpRequest) {
+        signUpRequest.setEmail(signUpRequest.getEmail().toLowerCase().trim());
+
+        if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("User already exists");
+        }
+
+        User user = new User(signUpRequest.getEmail());
+
+        user.setHashedPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+        user.setName(signUpRequest.getName());
+        user.setPhoneNumber(signUpRequest.getPhoneNumber());
+        user.setAddress(signUpRequest.getAddress());
+        user.setLongitude(signUpRequest.getLongitude());
+        user.setLatitude(signUpRequest.getLatitude());
+        user.setRoles(Set.of(Role.RIDER));
+
+        userRepository.save(user);
+
+        return user;
+    }
+
     public JwtAuthenticationResponse login(LoginRequest loginRequest) {
 
         loginRequest.setEmail(loginRequest.getEmail().toLowerCase().trim());

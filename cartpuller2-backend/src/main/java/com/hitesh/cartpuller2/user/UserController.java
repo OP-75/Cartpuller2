@@ -38,6 +38,13 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PostMapping("/signup-rider")
+    public ResponseEntity<User> signUpRider(@RequestBody SignUpRequest signUpRequest) {
+        User user = authenticationService.signUpRider(signUpRequest);
+        user.setHashedPassword(null);
+        return ResponseEntity.ok(user);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<JwtAuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
 

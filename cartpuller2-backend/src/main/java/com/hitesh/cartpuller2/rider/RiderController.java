@@ -1,0 +1,52 @@
+package com.hitesh.cartpuller2.rider;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hitesh.cartpuller2.global.dto.Activity;
+import com.hitesh.cartpuller2.global.dto.Location;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@RestController
+@RequestMapping("/api/rider")
+@RequiredArgsConstructor
+@Slf4j
+public class RiderController {
+
+    private final RiderService riderService;
+
+    @GetMapping("/check-token-validity")
+    public ResponseEntity<String> checkTokenValidity() {
+        return ResponseEntity.ok("Ok");
+    }
+
+    @PostMapping("/activate")
+    public ResponseEntity<String> activate(@RequestBody Location location, HttpServletRequest request) {
+        riderService.activateRider(location, request);
+        return ResponseEntity.ok("Ok");
+    }
+
+    @PostMapping("/deactivate")
+    public ResponseEntity<String> deactivate(HttpServletRequest request) {
+        riderService.deactivateRider(request);
+        return ResponseEntity.ok("Ok");
+    }
+
+    @PostMapping("/update-location")
+    public ResponseEntity<String> updateLocation(@RequestBody Location location, HttpServletRequest request) {
+        riderService.updateRiderLocation(location, request);
+        return ResponseEntity.ok("Ok");
+    }
+
+    @GetMapping("/check-if-active")
+    public ResponseEntity<Activity> checkIfActive(HttpServletRequest request) {
+        return ResponseEntity.ok(riderService.checkActive(request));
+    }
+}

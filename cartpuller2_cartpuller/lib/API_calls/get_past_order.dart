@@ -37,7 +37,7 @@ Future<List<Map<String, dynamic>>> getPastOrders() async {
         .map((e) => e as Map<String, dynamic>)
         .toList();
   } catch (e) {
-    dev.log("Order API call: ${e.toString()}");
+    dev.log("getPastOrders() API call: ${e.toString()}");
     rethrow;
   }
 }

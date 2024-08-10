@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cartpuller2_cartpuller/API_calls/accept_order.dart';
 import 'package:cartpuller2_cartpuller/API_calls/activate_cartpuller.dart';
+import 'package:cartpuller2_cartpuller/API_calls/check_activity_status.dart';
 import 'package:cartpuller2_cartpuller/API_calls/deactivate_cartpuller.dart';
 import 'package:cartpuller2_cartpuller/API_calls/get_orders.dart';
 import 'package:cartpuller2_cartpuller/API_calls/get_past_order.dart';
@@ -349,13 +350,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _checkAndSetStoreStatus() {
-    service.isRunning().then((value) {
+    getActivityStatus().then((value) {
       setState(() {
         _isStoreActive = value;
         if (_isStoreActive) {
           _storeIconColor = Colors.green;
+          startBackgroundService();
         } else {
           _storeIconColor = Colors.red;
+          startBackgroundService();
         }
       });
     });

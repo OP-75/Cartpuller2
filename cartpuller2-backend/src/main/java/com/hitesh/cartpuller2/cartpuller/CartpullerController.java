@@ -10,8 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hitesh.cartpuller2.cartpuller.dto.Location;
 import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
+import com.hitesh.cartpuller2.global.dto.Activity;
+import com.hitesh.cartpuller2.global.dto.Location;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 public class CartpullerController {
 
     private final CartpullerService cartpullerService;
+
+    @GetMapping("/check-token-validity")
+    public ResponseEntity<String> checkTokenValidity() {
+        return ResponseEntity.ok("Ok");
+    }
 
     @PostMapping("/activate")
     public ResponseEntity<String> activate(@RequestBody Location location, HttpServletRequest request) {
@@ -41,6 +47,11 @@ public class CartpullerController {
     public ResponseEntity<String> updateLocation(@RequestBody Location location, HttpServletRequest request) {
         cartpullerService.updateCartpullerLocation(location, request);
         return ResponseEntity.ok("Ok");
+    }
+
+    @GetMapping("/check-if-active")
+    public ResponseEntity<Activity> checkIfActive(HttpServletRequest request) {
+        return ResponseEntity.ok(cartpullerService.checkActive(request));
     }
 
     @GetMapping("/orders")

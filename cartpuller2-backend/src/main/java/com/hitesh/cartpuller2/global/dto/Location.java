@@ -1,4 +1,4 @@
-package com.hitesh.cartpuller2.cartpuller.dto;
+package com.hitesh.cartpuller2.global.dto;
 
 import lombok.Data;
 

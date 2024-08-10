@@ -7,10 +7,11 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.hitesh.cartpuller2.cartpuller.dto.Location;
 import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
 import com.hitesh.cartpuller2.cartpuller.exception.CartpullerNotActivatedException;
 import com.hitesh.cartpuller2.cartpuller.exception.CartpullerOrderAlreadyAcceptedException;
+import com.hitesh.cartpuller2.global.dto.Activity;
+import com.hitesh.cartpuller2.global.dto.Location;
 import com.hitesh.cartpuller2.order.Order;
 import com.hitesh.cartpuller2.order.OrderService;
 import com.hitesh.cartpuller2.order.OrderStatus;
@@ -153,5 +154,14 @@ public class CartpullerService {
     private OrderDto getOrderDtoFromOrder(Order order) {
         return new OrderDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
                 order.getOrderStatus());
+    }
+
+    public Activity checkActive(HttpServletRequest request) {
+        String email = helperService.getEmailFromRequest(request);
+        if (activeCartpullerRepository.findByEmail(email).isPresent()) {
+            return new Activity(true);
+        } else {
+            return new Activity(false);
+        }
     }
 }
