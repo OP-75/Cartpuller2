@@ -1,10 +1,11 @@
 Implement Caching for Updating (CachePut) Cartpuller & Rider location as well as for Getting them (Cache)
 
-Add API paths like /api/customer/validateToken, /api/cartpuller/validateToken, /api/rider/validateToken, to check validity of token on login page so we dont have to request the token again and again
+Add API paths like /api/customer/validateToken, to check validity of token on login page so we dont have to request the token again and again
 Also write logic for this in app
 
 Make assgining of order like old app (every 30s the next nearest cartpuller will get the order for grabs, we can do this by making a table and running a backround function and this table will have cartpullerID : List<Order> Map)
 
 Instead of putting 2 strings longitude&latitide use `Point` Object, this will allow us to make geo-spatial queries in mongo
 
-Add path like /is-cartpuller-active (returns boolean)  
+Inside timer (started in init()) instead of calling setState() periodically and refreshing the build() method with future builder, use stream builder
+  

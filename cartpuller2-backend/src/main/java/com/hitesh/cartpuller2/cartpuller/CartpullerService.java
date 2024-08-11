@@ -151,6 +151,10 @@ public class CartpullerService {
         return activeCartpullerRepository.findByEmail(email).isPresent();
     }
 
+    public ActiveCartpuller getActiveCartpuller(String email) {
+        return activeCartpullerRepository.findByEmail(email).get();
+    }
+
     private OrderDto getOrderDtoFromOrder(Order order) {
         return new OrderDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
                 order.getOrderStatus());

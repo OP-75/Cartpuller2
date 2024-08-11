@@ -1,14 +1,20 @@
 package com.hitesh.cartpuller2.rider;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
 import com.hitesh.cartpuller2.global.dto.Activity;
 import com.hitesh.cartpuller2.global.dto.Location;
+import com.hitesh.cartpuller2.rider.dto.RiderOrderDeliveryDto;
+import com.hitesh.cartpuller2.rider.dto.RiderOrderRedactedDto;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -48,5 +54,21 @@ public class RiderController {
     @GetMapping("/check-if-active")
     public ResponseEntity<Activity> checkIfActive(HttpServletRequest request) {
         return ResponseEntity.ok(riderService.checkActive(request));
+    }
+
+    @GetMapping("/orders")
+    public ResponseEntity<List<RiderOrderDeliveryDto>> getOrders(HttpServletRequest request) {
+        return ResponseEntity.ok(riderService.getOrdersIfActive(request));
+    }
+
+    @GetMapping("/past-accepted-orders")
+    public ResponseEntity<List<RiderOrderRedactedDto>> getPastAcceptedOrders(HttpServletRequest request) {
+        return ResponseEntity.ok(riderService.getPastOrders(request));
+    }
+
+    @PostMapping("/accept-order/{orderId}")
+    public ResponseEntity<RiderOrderDeliveryDto> acceptCartpullerOrder(HttpServletRequest request,
+            @PathVariable String orderId) {
+        return ResponseEntity.ok(riderService.acceptOrderIfActive(request, orderId));
     }
 }

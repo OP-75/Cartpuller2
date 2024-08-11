@@ -58,6 +58,10 @@ public class OrderService {
         return orderRepository.findByCartpullerEmail(cartpullerEmail);
     }
 
+    public List<Order> getOrderByRiderEmail(String riderEmail) {
+        return orderRepository.findByRiderEmail(riderEmail);
+    }
+
     public Order updateOrder(Order newOrder) {
         // since repository has no way to update order we will delete and then save new
         // order

@@ -13,7 +13,9 @@ import 'package:cartpuller2_rider/Custom_exceptions/invalid_token.dart';
 import 'package:cartpuller2_rider/Custom_exceptions/order_already_accepted.dart';
 import 'package:cartpuller2_rider/Helper_functions/determine_user_position.dart';
 import 'package:cartpuller2_rider/background_foreground_service_config/service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:developer' as dev;
@@ -39,6 +41,13 @@ class _HomePageState extends State<HomePage> {
   //Back list for when a user cancels order, it becomes everytime user closes the app
   final Set<String> _blackList = {};
 
+  //Curr position of rider for distance calculation
+  Position? _riderPosition;
+
+  //! Caching so UI looks smooth (timer calls set state periodically which causes future builder to run as well fetching the updated data)
+  Widget? _liveOrdersWidgetCache;
+  Widget? _pastOrdersWidgetCache;
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +71,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    //initalize rider position
+    determinePosition().then((val) {
+      _riderPosition = val;
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Homepage"),
@@ -95,16 +109,28 @@ class _HomePageState extends State<HomePage> {
     return FutureBuilder(
       future: _fetchAvailableOrders(context),
       builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Map<String, dynamic>> data = snapshot.data!;
+        //! Snaphot has old data while changing from bottom navigation bar so had to add `snapshot.connectionState==ConnectionState.done`
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            List<Map<String, dynamic>> data = snapshot.data!;
 
-          //remove elements from black list
-          data.removeWhere((order) => _blackList.contains(order['id']));
+            //remove elements from black list
+            data.removeWhere((order) => _blackList.contains(order['id']));
 
-          return _ordersListView(data);
-        } else if (snapshot.hasError) {
-          return Text(snapshot.error.toString());
+            _liveOrdersWidgetCache = _ordersListView(data);
+            return _liveOrdersWidgetCache!;
+          } else if (snapshot.hasError) {
+            _liveOrdersWidgetCache = Text(snapshot.error.toString());
+            return _liveOrdersWidgetCache!;
+          } else {
+            _liveOrdersWidgetCache = const Text("");
+            return _liveOrdersWidgetCache!;
+          }
         } else {
+          if (_liveOrdersWidgetCache != null) {
+            //! Caching so UI looks smooth (timer calls set state periodically which causes future builder to run as well fetching the updated data)
+            return _liveOrdersWidgetCache!;
+          }
           return const CircularProgressIndicator();
         }
       },
@@ -125,7 +151,7 @@ class _HomePageState extends State<HomePage> {
               tileColor: Colors.grey[300],
               title: Text("Order ID: ${currOrder['id']} "),
               subtitle: Column(children: [
-                _buildTable(currOrder),
+                _buildLiveOrderTable(currOrder),
                 Center(
                   child: Row(
                     children: [
@@ -161,11 +187,22 @@ class _HomePageState extends State<HomePage> {
     return FutureBuilder(
       future: _fetchPastOrders(context),
       builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return _pastOrdersListView(snapshot.data!);
-        } else if (snapshot.hasError) {
-          return Text(snapshot.error.toString());
+        //! Snaphot has old data while changing from bottom navigation bar so had to add `snapshot.connectionState==ConnectionState.done`
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            _pastOrdersWidgetCache = _pastOrdersListView(snapshot.data!);
+            return _pastOrdersWidgetCache!;
+          } else if (snapshot.hasError) {
+            _pastOrdersWidgetCache = Text(snapshot.error.toString());
+            return _pastOrdersWidgetCache!;
+          } else {
+            return const Text("");
+          }
         } else {
+          if (_pastOrdersWidgetCache != null) {
+            //! Caching so UI looks smooth (timer calls set state periodically which causes future builder to run as well fetching the updated data)
+            return _pastOrdersWidgetCache!;
+          }
           return const CircularProgressIndicator();
         }
       },
@@ -183,25 +220,26 @@ class _HomePageState extends State<HomePage> {
             child: ListTile(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.5)),
-              tileColor: currOrder['orderStatus'] == "ACCEPTED" ||
+              tileColor: currOrder['orderStatus'] == "DELIVERY_IN_PROGRESS" ||
                       currOrder['orderStatus'] == "RIDER_ASSIGNED"
                   ? Colors.amber
                   : Colors.grey[300],
-              title: Text(
-                  "Order ID: ${currOrder['id']}, Status = ${currOrder['orderStatus']}"),
-              subtitle: _buildTable(currOrder),
+              title: Text("Order ID: ${currOrder['id']}"),
+              subtitle: Text("Status = ${currOrder['orderStatus']}"),
+              trailing: OutlinedButton(
+                child: const Text("Open"),
+                onPressed: () {},
+              ),
             ),
           );
         });
   }
 
-  Widget _buildTable(Map<String, dynamic> currOrder) {
+  Widget _buildLiveOrderTable(Map<String, dynamic> currOrder) {
     List<TableRow> cartTableRows = [];
     cartTableRows.add(const TableRow(children: [
       Text("Veggie"),
       Text("Qty"),
-      Text("Price/item"),
-      Text("Total")
     ]));
 
     int total = 0;
@@ -222,17 +260,31 @@ class _HomePageState extends State<HomePage> {
         cartTableRows.add(TableRow(children: [
           Text("${vegetableDetailMap[id]['title']}:"),
           Text("$qty"),
-          Text("${vegetableDetailMap[id]['price']}"),
-          Text("${vegetableDetailMap[id]['price'] * qty}")
         ]));
       },
     );
 
+    TableRow emptyRow = const TableRow(children: [
+      Text(""),
+      Text(""),
+    ]);
+
+    cartTableRows.add(emptyRow);
     cartTableRows.add(TableRow(children: [
-      Text("Total = $total"),
+      Text("Total = $total rs"),
       const Text(""),
+    ]));
+
+    String distance = _getDistance(
+        double.parse(currOrder['pickupLatitude']),
+        double.parse(currOrder['pickupLongitude']),
+        double.parse(currOrder['deliveryLatitude']),
+        double.parse(currOrder['deliveryLongitude']));
+
+    cartTableRows.add(emptyRow);
+    cartTableRows.add(TableRow(children: [
+      Text("Distance = $distance Km"),
       const Text(""),
-      const Text("")
     ]));
 
     return Table(
@@ -375,11 +427,24 @@ class _HomePageState extends State<HomePage> {
       case 0:
         return _liveOrderWidget(context);
       case 1:
-        //  return _loadAcceptedOrdersListView();
         return _pastOrderWidget(context);
       default:
         return Text(
             "_getWidgetOfSelectedIndex() Error: Index $index isnt know");
+    }
+  }
+
+  String _getDistance(double pickupLatitude, double pickupLongitude,
+      double deliveryLatitude, double deliveryLongitude) {
+    if (_riderPosition == null) {
+      return "Calculating...";
+    } else {
+      double distInMeters = Geolocator.distanceBetween(_riderPosition!.latitude,
+              _riderPosition!.longitude, pickupLatitude, pickupLongitude) +
+          Geolocator.distanceBetween(pickupLatitude, pickupLongitude,
+              deliveryLatitude, deliveryLongitude);
+      double distInKm = distInMeters / 1000;
+      return distInKm.toStringAsFixed(1);
     }
   }
 }

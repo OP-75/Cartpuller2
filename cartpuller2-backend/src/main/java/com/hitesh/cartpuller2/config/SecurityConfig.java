@@ -33,7 +33,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((request) -> request
-                        .requestMatchers("/api/auth/**", "/api/user/ping").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/auth/ping").permitAll()
                         .requestMatchers("/api/customer/**").hasAnyAuthority(Role.CUSTOMER.name())
                         .requestMatchers("/api/rider/**").hasAnyAuthority(Role.RIDER.name())
                         .requestMatchers("/api/cartpuller/**").hasAnyAuthority(Role.CARTPULLER.name())
