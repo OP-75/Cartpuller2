@@ -190,7 +190,8 @@ class _HomePageState extends State<HomePage> {
         //! Snaphot has old data while changing from bottom navigation bar so had to add `snapshot.connectionState==ConnectionState.done`
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
-            _pastOrdersWidgetCache = _pastOrdersListView(snapshot.data!);
+            _pastOrdersWidgetCache =
+                _pastOrdersListView(snapshot.data!, context);
             return _pastOrdersWidgetCache!;
           } else if (snapshot.hasError) {
             _pastOrdersWidgetCache = Text(snapshot.error.toString());
@@ -209,7 +210,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _pastOrdersListView(List<Map<String, dynamic>> ordersList) {
+  Widget _pastOrdersListView(
+      List<Map<String, dynamic>> ordersList, BuildContext context) {
     return ListView.builder(
         itemCount: ordersList.length,
         itemBuilder: (context, index) {
@@ -228,7 +230,10 @@ class _HomePageState extends State<HomePage> {
               subtitle: Text("Status = ${currOrder['orderStatus']}"),
               trailing: OutlinedButton(
                 child: const Text("Open"),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context)
+                      .pushNamed("/order-details", arguments: currOrder['id']);
+                },
               ),
             ),
           );

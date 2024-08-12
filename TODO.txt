@@ -7,5 +7,6 @@ Make assgining of order like old app (every 30s the next nearest cartpuller will
 
 Instead of putting 2 strings longitude&latitide use `Point` Object, this will allow us to make geo-spatial queries in mongo
 
-Inside timer (started in init()) instead of calling setState() periodically and refreshing the build() method with future builder, use stream builder
-  
+Inside timer (started in init()) instead of calling setState() periodically and refreshing the build() method with future builder, use stream builder (in cartpuller & especially rider app)
+
+Add a permanent warning on order_details_page that the cartpuller location might change when they click on track button, to get updated coordinates of cartpuller come back to our app and click track again

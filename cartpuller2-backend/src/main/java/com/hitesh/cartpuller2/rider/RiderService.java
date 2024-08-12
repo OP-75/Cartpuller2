@@ -3,6 +3,7 @@ package com.hitesh.cartpuller2.rider;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -14,8 +15,10 @@ import com.hitesh.cartpuller2.global.dto.Location;
 import com.hitesh.cartpuller2.order.Order;
 import com.hitesh.cartpuller2.order.OrderService;
 import com.hitesh.cartpuller2.order.OrderStatus;
-import com.hitesh.cartpuller2.rider.dto.RiderOrderDeliveryDto;
+import com.hitesh.cartpuller2.rider.dto.RiderOrderDetailedDto;
 import com.hitesh.cartpuller2.rider.dto.RiderOrderRedactedDto;
+import com.hitesh.cartpuller2.rider.exception.AuthorizationException;
+import com.hitesh.cartpuller2.rider.exception.BadRequestException;
 import com.hitesh.cartpuller2.rider.exception.RiderAlreadyAssignedException;
 import com.hitesh.cartpuller2.rider.exception.RiderInactiveException;
 import com.hitesh.cartpuller2.service.HelperService;
@@ -105,7 +108,7 @@ public class RiderService {
         }
     }
 
-    public List<RiderOrderDeliveryDto> getOrdersIfActive(HttpServletRequest request) {
+    public List<RiderOrderDetailedDto> getOrdersIfActive(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
         if (!isRiderActive(email)) {
@@ -113,7 +116,7 @@ public class RiderService {
         }
 
         List<Order> orders = orderService.getByOrderStatus(OrderStatus.ACCEPTED);
-        List<RiderOrderDeliveryDto> ordersDto = new ArrayList<>();
+        List<RiderOrderDetailedDto> ordersDto = new ArrayList<>();
         for (Order order : orders) {
             ordersDto.add(getRiderOrderDeliveryDtoFromOrder(order));
         }
@@ -133,7 +136,7 @@ public class RiderService {
 
     }
 
-    public RiderOrderDeliveryDto acceptOrderIfActive(HttpServletRequest request, String orderId) {
+    public RiderOrderDetailedDto acceptOrderIfActive(HttpServletRequest request, String orderId) {
         final String riderEmail = helperService.getEmailFromRequest(request);
 
         if (!isRiderActive(riderEmail)) {
@@ -161,14 +164,14 @@ public class RiderService {
         return new RiderOrderRedactedDto(order.getId(), order.getOrderStatus());
     }
 
-    private RiderOrderDeliveryDto getRiderOrderDeliveryDtoFromOrder(Order order) {
+    private RiderOrderDetailedDto getRiderOrderDeliveryDtoFromOrder(Order order) {
 
         User customer = userService.getUserByEmail(order.getCustomerEmail());
         User cartpuller = userService.getUserByEmail(order.getCartpullerEmail());
         // for cartpuller location
         ActiveCartpuller activeCartpullerDetails = cartpullerService.getActiveCartpuller(order.getCartpullerEmail());
 
-        return new RiderOrderDeliveryDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
+        return new RiderOrderDetailedDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
                 order.getOrderStatus(), customer.getPhoneNumber(), customer.getName(), cartpuller.getPhoneNumber(),
                 cartpuller.getName(), activeCartpullerDetails.getLatitude(), activeCartpullerDetails.getLongitude(),
                 customer.getAddress(), customer.getLatitude(), customer.getLongitude());
@@ -176,6 +179,29 @@ public class RiderService {
 
     private boolean isRiderActive(String email) {
         return activeRiderRepository.findByEmail(email).isPresent();
+    }
+
+    public RiderOrderDetailedDto getAccepedOrderDetails(HttpServletRequest request, String orderId) {
+        // first check if order is assigned to rider & delivery status = RIDER_ASSIGNED
+        // or DELIVERY_IN_PROGRESS, before returning
+
+        String riderEmail = helperService.getEmailFromRequest(request);
+        Order order;
+        try {
+            order = orderService.getByOrderId(orderId);
+        } catch (NoSuchElementException e) {
+            throw new BadRequestException("No order can be found with the given ID");
+        }
+
+        if (order.getRiderEmail().equals(riderEmail) && (order.getOrderStatus().equals(OrderStatus.RIDER_ASSIGNED)
+                || order.getOrderStatus().equals(OrderStatus.DELIVERY_IN_PROGRESS))) {
+
+            return getRiderOrderDeliveryDtoFromOrder(order);
+
+        } else {
+            throw new AuthorizationException("You dont have proper authorization");
+        }
+
     }
 
 }

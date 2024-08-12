@@ -14,7 +14,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class RiderOrderDeliveryDto implements Serializable {
+public class RiderOrderDetailedDto implements Serializable {
     @Id
     @MongoId
     private String id;

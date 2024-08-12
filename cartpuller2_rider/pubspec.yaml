@@ -42,6 +42,7 @@ dependencies:
   device_info_plus: ^10.1.1
   flutter_background_service_android: ^6.2.4
   flutter_local_notifications: ^17.2.1+2
+  map_launcher: ^3.3.1
 
 dev_dependencies:
   flutter_test:

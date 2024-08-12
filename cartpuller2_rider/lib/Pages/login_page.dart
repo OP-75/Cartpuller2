@@ -44,6 +44,7 @@ class LoginPage extends StatelessWidget {
               // padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0,bottom: 0),
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: TextField(
+                autofocus: true,
                 controller: emailController,
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(),
@@ -149,8 +150,12 @@ class LoginPage extends StatelessWidget {
   }
 
   Future<void> _loginIfExistingTokenValid(BuildContext context) async {
-    if (await isTokenValid() && context.mounted) {
-      Navigator.of(context).popAndPushNamed("/home");
+    try {
+      if (await isTokenValid() && context.mounted) {
+        Navigator.of(context).popAndPushNamed("/home");
+      }
+    } catch (e) {
+      //do nothing
     }
   }
 }

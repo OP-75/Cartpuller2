@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
 import com.hitesh.cartpuller2.global.dto.Activity;
 import com.hitesh.cartpuller2.global.dto.Location;
-import com.hitesh.cartpuller2.rider.dto.RiderOrderDeliveryDto;
+import com.hitesh.cartpuller2.rider.dto.RiderOrderDetailedDto;
 import com.hitesh.cartpuller2.rider.dto.RiderOrderRedactedDto;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +57,7 @@ public class RiderController {
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<List<RiderOrderDeliveryDto>> getOrders(HttpServletRequest request) {
+    public ResponseEntity<List<RiderOrderDetailedDto>> getOrders(HttpServletRequest request) {
         return ResponseEntity.ok(riderService.getOrdersIfActive(request));
     }
 
@@ -66,8 +66,14 @@ public class RiderController {
         return ResponseEntity.ok(riderService.getPastOrders(request));
     }
 
+    @GetMapping("/accepted-order-details/{orderId}")
+    public ResponseEntity<RiderOrderDetailedDto> getAcceptedOrderDetails(HttpServletRequest request,
+            @PathVariable String orderId) {
+        return ResponseEntity.ok(riderService.getAccepedOrderDetails(request, orderId));
+    }
+
     @PostMapping("/accept-order/{orderId}")
-    public ResponseEntity<RiderOrderDeliveryDto> acceptCartpullerOrder(HttpServletRequest request,
+    public ResponseEntity<RiderOrderDetailedDto> acceptCartpullerOrder(HttpServletRequest request,
             @PathVariable String orderId) {
         return ResponseEntity.ok(riderService.acceptOrderIfActive(request, orderId));
     }
