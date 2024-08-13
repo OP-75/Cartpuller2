@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
 import com.hitesh.cartpuller2.global.dto.Activity;
 import com.hitesh.cartpuller2.global.dto.Location;
 import com.hitesh.cartpuller2.rider.dto.RiderOrderDetailedDto;
@@ -73,8 +71,21 @@ public class RiderController {
     }
 
     @PostMapping("/accept-order/{orderId}")
-    public ResponseEntity<RiderOrderDetailedDto> acceptCartpullerOrder(HttpServletRequest request,
+    public ResponseEntity<RiderOrderDetailedDto> acceptOrder(HttpServletRequest request,
             @PathVariable String orderId) {
         return ResponseEntity.ok(riderService.acceptOrderIfActive(request, orderId));
     }
+
+    @PostMapping("/pickup-order/{orderId}")
+    public ResponseEntity<RiderOrderDetailedDto> pickupOrder(HttpServletRequest request,
+            @PathVariable String orderId) {
+        return ResponseEntity.ok(riderService.pickupOrderIfActive(request, orderId));
+    }
+
+    @PostMapping("/deliver-order/{orderId}")
+    public ResponseEntity<RiderOrderRedactedDto> deliverOrder(HttpServletRequest request,
+            @PathVariable String orderId) {
+        return ResponseEntity.ok(riderService.deliverOrderIfActive(request, orderId));
+    }
+
 }

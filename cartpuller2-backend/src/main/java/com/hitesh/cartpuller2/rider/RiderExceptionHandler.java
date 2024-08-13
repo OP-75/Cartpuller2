@@ -1,11 +1,11 @@
 package com.hitesh.cartpuller2.rider;
 
+import java.util.NoSuchElementException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpClientErrorException.BadRequest;
-
 import com.hitesh.cartpuller2.global.data.ErrorResponse;
 import com.hitesh.cartpuller2.rider.exception.AuthorizationException;
 import com.hitesh.cartpuller2.rider.exception.BadRequestException;
@@ -33,5 +33,10 @@ public class RiderExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> badRequestException(Exception e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponse> noSuchElementException(Exception e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Requested resource not found"));
     }
 }

@@ -228,13 +228,15 @@ class _HomePageState extends State<HomePage> {
                   : Colors.grey[300],
               title: Text("Order ID: ${currOrder['id']}"),
               subtitle: Text("Status = ${currOrder['orderStatus']}"),
-              trailing: OutlinedButton(
-                child: const Text("Open"),
-                onPressed: () {
-                  Navigator.of(context)
-                      .pushNamed("/order-details", arguments: currOrder['id']);
-                },
-              ),
+              trailing: currOrder['orderStatus'] == "DELIVERED"
+                  ? Container()
+                  : OutlinedButton(
+                      child: const Text("Open"),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed("/order-details",
+                            arguments: currOrder['id']);
+                      },
+                    ),
             ),
           );
         });

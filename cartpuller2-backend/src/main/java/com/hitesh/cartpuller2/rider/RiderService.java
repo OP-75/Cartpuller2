@@ -118,7 +118,7 @@ public class RiderService {
         List<Order> orders = orderService.getByOrderStatus(OrderStatus.ACCEPTED);
         List<RiderOrderDetailedDto> ordersDto = new ArrayList<>();
         for (Order order : orders) {
-            ordersDto.add(getRiderOrderDeliveryDtoFromOrder(order));
+            ordersDto.add(getRiderOrderDetailedDto(order));
         }
         return ordersDto;
     }
@@ -155,30 +155,8 @@ public class RiderService {
 
         Order updatedOrder = orderService.updateOrder(order);
 
-        return getRiderOrderDeliveryDtoFromOrder(updatedOrder);
+        return getRiderOrderDetailedDto(updatedOrder);
 
-    }
-
-    // ----------------private methods-----------------------
-    private RiderOrderRedactedDto getRiderOrderRedactedDto(Order order) {
-        return new RiderOrderRedactedDto(order.getId(), order.getOrderStatus());
-    }
-
-    private RiderOrderDetailedDto getRiderOrderDeliveryDtoFromOrder(Order order) {
-
-        User customer = userService.getUserByEmail(order.getCustomerEmail());
-        User cartpuller = userService.getUserByEmail(order.getCartpullerEmail());
-        // for cartpuller location
-        ActiveCartpuller activeCartpullerDetails = cartpullerService.getActiveCartpuller(order.getCartpullerEmail());
-
-        return new RiderOrderDetailedDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
-                order.getOrderStatus(), customer.getPhoneNumber(), customer.getName(), cartpuller.getPhoneNumber(),
-                cartpuller.getName(), activeCartpullerDetails.getLatitude(), activeCartpullerDetails.getLongitude(),
-                customer.getAddress(), customer.getLatitude(), customer.getLongitude());
-    }
-
-    private boolean isRiderActive(String email) {
-        return activeRiderRepository.findByEmail(email).isPresent();
     }
 
     public RiderOrderDetailedDto getAccepedOrderDetails(HttpServletRequest request, String orderId) {
@@ -196,12 +174,76 @@ public class RiderService {
         if (order.getRiderEmail().equals(riderEmail) && (order.getOrderStatus().equals(OrderStatus.RIDER_ASSIGNED)
                 || order.getOrderStatus().equals(OrderStatus.DELIVERY_IN_PROGRESS))) {
 
-            return getRiderOrderDeliveryDtoFromOrder(order);
+            return getRiderOrderDetailedDto(order);
 
         } else {
             throw new AuthorizationException("You dont have proper authorization");
         }
 
+    }
+
+    public RiderOrderDetailedDto pickupOrderIfActive(HttpServletRequest request, String orderId) {
+        final String riderEmail = helperService.getEmailFromRequest(request);
+
+        if (!isRiderActive(riderEmail)) {
+            throw new RiderInactiveException("Please activate get orders");
+        }
+
+        Order order = orderService.getByOrderId(orderId);
+        if (!order.getRiderEmail().equals(riderEmail)) {
+            // ie if rider email in order!=email in jwt
+            throw new RiderAlreadyAssignedException("This order has already been assigned to another rider");
+        }
+
+        order.setOrderStatus(OrderStatus.DELIVERY_IN_PROGRESS);
+
+        Order updatedOrder = orderService.updateOrder(order);
+
+        return getRiderOrderDetailedDto(updatedOrder);
+
+    }
+
+    public RiderOrderRedactedDto deliverOrderIfActive(HttpServletRequest request, String orderId) {
+        final String riderEmail = helperService.getEmailFromRequest(request);
+
+        if (!isRiderActive(riderEmail)) {
+            throw new RiderInactiveException("Please activate get orders");
+        }
+
+        Order order = orderService.getByOrderId(orderId);
+        if (!order.getRiderEmail().equals(riderEmail)) {
+            // ie if rider email in order!=email in jwt
+            throw new RiderAlreadyAssignedException("This order has already been assigned to another rider");
+        }
+
+        order.setOrderStatus(OrderStatus.DELIVERED);
+
+        Order updatedOrder = orderService.updateOrder(order);
+
+        return getRiderOrderRedactedDto(updatedOrder);
+
+    }
+
+    // ----------------private methods-----------------------
+    private RiderOrderRedactedDto getRiderOrderRedactedDto(Order order) {
+        return new RiderOrderRedactedDto(order.getId(), order.getOrderStatus());
+    }
+
+    private RiderOrderDetailedDto getRiderOrderDetailedDto(Order order) {
+
+        User customer = userService.getUserByEmail(order.getCustomerEmail());
+        User cartpuller = userService.getUserByEmail(order.getCartpullerEmail());
+        // for cartpuller location
+        ActiveCartpuller activeCartpullerDetails = cartpullerService.getActiveCartpuller(order.getCartpullerEmail());
+
+        return new RiderOrderDetailedDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
+                order.getOrderStatus(), customer.getPhoneNumber(), customer.getName(), cartpuller.getPhoneNumber(),
+                cartpuller.getName(), activeCartpullerDetails.getLatitude(), activeCartpullerDetails.getLongitude(),
+                customer.getAddress(), customer.getLatitude(), customer.getLongitude());
+    }
+
+    private boolean isRiderActive(String email) {
+        return activeRiderRepository.findByEmail(email).isPresent();
     }
 
 }
