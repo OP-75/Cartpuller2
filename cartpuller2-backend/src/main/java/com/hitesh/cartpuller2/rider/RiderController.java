@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.hitesh.cartpuller2.global.dto.Activity;
 import com.hitesh.cartpuller2.global.dto.Location;
-import com.hitesh.cartpuller2.rider.dto.RiderOrderDetailedDto;
-import com.hitesh.cartpuller2.rider.dto.RiderOrderRedactedDto;
+import com.hitesh.cartpuller2.rider.dto.DetailedOrderDto;
+import com.hitesh.cartpuller2.rider.dto.RedactedOrderDto;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -55,35 +55,35 @@ public class RiderController {
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<List<RiderOrderDetailedDto>> getOrders(HttpServletRequest request) {
+    public ResponseEntity<List<DetailedOrderDto>> getOrders(HttpServletRequest request) {
         return ResponseEntity.ok(riderService.getOrdersIfActive(request));
     }
 
     @GetMapping("/past-accepted-orders")
-    public ResponseEntity<List<RiderOrderRedactedDto>> getPastAcceptedOrders(HttpServletRequest request) {
+    public ResponseEntity<List<RedactedOrderDto>> getPastAcceptedOrders(HttpServletRequest request) {
         return ResponseEntity.ok(riderService.getPastOrders(request));
     }
 
     @GetMapping("/accepted-order-details/{orderId}")
-    public ResponseEntity<RiderOrderDetailedDto> getAcceptedOrderDetails(HttpServletRequest request,
+    public ResponseEntity<DetailedOrderDto> getAcceptedOrderDetails(HttpServletRequest request,
             @PathVariable String orderId) {
         return ResponseEntity.ok(riderService.getAccepedOrderDetails(request, orderId));
     }
 
     @PostMapping("/accept-order/{orderId}")
-    public ResponseEntity<RiderOrderDetailedDto> acceptOrder(HttpServletRequest request,
+    public ResponseEntity<DetailedOrderDto> acceptOrder(HttpServletRequest request,
             @PathVariable String orderId) {
         return ResponseEntity.ok(riderService.acceptOrderIfActive(request, orderId));
     }
 
     @PostMapping("/pickup-order/{orderId}")
-    public ResponseEntity<RiderOrderDetailedDto> pickupOrder(HttpServletRequest request,
+    public ResponseEntity<DetailedOrderDto> pickupOrder(HttpServletRequest request,
             @PathVariable String orderId) {
         return ResponseEntity.ok(riderService.pickupOrderIfActive(request, orderId));
     }
 
     @PostMapping("/deliver-order/{orderId}")
-    public ResponseEntity<RiderOrderRedactedDto> deliverOrder(HttpServletRequest request,
+    public ResponseEntity<RedactedOrderDto> deliverOrder(HttpServletRequest request,
             @PathVariable String orderId) {
         return ResponseEntity.ok(riderService.deliverOrderIfActive(request, orderId));
     }

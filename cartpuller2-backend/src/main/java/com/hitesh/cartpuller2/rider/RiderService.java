@@ -15,8 +15,8 @@ import com.hitesh.cartpuller2.global.dto.Location;
 import com.hitesh.cartpuller2.order.Order;
 import com.hitesh.cartpuller2.order.OrderService;
 import com.hitesh.cartpuller2.order.OrderStatus;
-import com.hitesh.cartpuller2.rider.dto.RiderOrderDetailedDto;
-import com.hitesh.cartpuller2.rider.dto.RiderOrderRedactedDto;
+import com.hitesh.cartpuller2.rider.dto.DetailedOrderDto;
+import com.hitesh.cartpuller2.rider.dto.RedactedOrderDto;
 import com.hitesh.cartpuller2.rider.exception.AuthorizationException;
 import com.hitesh.cartpuller2.rider.exception.BadRequestException;
 import com.hitesh.cartpuller2.rider.exception.RiderAlreadyAssignedException;
@@ -39,6 +39,10 @@ public class RiderService {
     private final HelperService helperService;
     private final ActiveRiderRepository activeRiderRepository;
     private final CartpullerService cartpullerService;
+
+    public ActiveRider getActiveRiderByEmail(String email) {
+        return activeRiderRepository.findByEmail(email).get();
+    }
 
     public void activateRider(Location location, HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
@@ -108,7 +112,7 @@ public class RiderService {
         }
     }
 
-    public List<RiderOrderDetailedDto> getOrdersIfActive(HttpServletRequest request) {
+    public List<DetailedOrderDto> getOrdersIfActive(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
         if (!isRiderActive(email)) {
@@ -116,19 +120,19 @@ public class RiderService {
         }
 
         List<Order> orders = orderService.getByOrderStatus(OrderStatus.ACCEPTED);
-        List<RiderOrderDetailedDto> ordersDto = new ArrayList<>();
+        List<DetailedOrderDto> ordersDto = new ArrayList<>();
         for (Order order : orders) {
             ordersDto.add(getRiderOrderDetailedDto(order));
         }
         return ordersDto;
     }
 
-    public List<RiderOrderRedactedDto> getPastOrders(HttpServletRequest request) {
+    public List<RedactedOrderDto> getPastOrders(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
         List<Order> orders = orderService.getOrderByRiderEmail(email);
 
-        List<RiderOrderRedactedDto> ordersDto = new ArrayList<>();
+        List<RedactedOrderDto> ordersDto = new ArrayList<>();
         for (Order order : orders) {
             ordersDto.add(getRiderOrderRedactedDto(order));
         }
@@ -136,7 +140,7 @@ public class RiderService {
 
     }
 
-    public RiderOrderDetailedDto acceptOrderIfActive(HttpServletRequest request, String orderId) {
+    public DetailedOrderDto acceptOrderIfActive(HttpServletRequest request, String orderId) {
         final String riderEmail = helperService.getEmailFromRequest(request);
 
         if (!isRiderActive(riderEmail)) {
@@ -159,7 +163,7 @@ public class RiderService {
 
     }
 
-    public RiderOrderDetailedDto getAccepedOrderDetails(HttpServletRequest request, String orderId) {
+    public DetailedOrderDto getAccepedOrderDetails(HttpServletRequest request, String orderId) {
         // first check if order is assigned to rider & delivery status = RIDER_ASSIGNED
         // or DELIVERY_IN_PROGRESS, before returning
 
@@ -182,7 +186,7 @@ public class RiderService {
 
     }
 
-    public RiderOrderDetailedDto pickupOrderIfActive(HttpServletRequest request, String orderId) {
+    public DetailedOrderDto pickupOrderIfActive(HttpServletRequest request, String orderId) {
         final String riderEmail = helperService.getEmailFromRequest(request);
 
         if (!isRiderActive(riderEmail)) {
@@ -203,7 +207,7 @@ public class RiderService {
 
     }
 
-    public RiderOrderRedactedDto deliverOrderIfActive(HttpServletRequest request, String orderId) {
+    public RedactedOrderDto deliverOrderIfActive(HttpServletRequest request, String orderId) {
         final String riderEmail = helperService.getEmailFromRequest(request);
 
         if (!isRiderActive(riderEmail)) {
@@ -225,18 +229,18 @@ public class RiderService {
     }
 
     // ----------------private methods-----------------------
-    private RiderOrderRedactedDto getRiderOrderRedactedDto(Order order) {
-        return new RiderOrderRedactedDto(order.getId(), order.getOrderStatus());
+    private RedactedOrderDto getRiderOrderRedactedDto(Order order) {
+        return new RedactedOrderDto(order.getId(), order.getOrderStatus());
     }
 
-    private RiderOrderDetailedDto getRiderOrderDetailedDto(Order order) {
+    private DetailedOrderDto getRiderOrderDetailedDto(Order order) {
 
         User customer = userService.getUserByEmail(order.getCustomerEmail());
         User cartpuller = userService.getUserByEmail(order.getCartpullerEmail());
         // for cartpuller location
         ActiveCartpuller activeCartpullerDetails = cartpullerService.getActiveCartpuller(order.getCartpullerEmail());
 
-        return new RiderOrderDetailedDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
+        return new DetailedOrderDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
                 order.getOrderStatus(), customer.getPhoneNumber(), customer.getName(), cartpuller.getPhoneNumber(),
                 cartpuller.getName(), activeCartpullerDetails.getLatitude(), activeCartpullerDetails.getLongitude(),
                 customer.getAddress(), customer.getLatitude(), customer.getLongitude());

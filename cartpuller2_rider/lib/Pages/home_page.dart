@@ -229,7 +229,7 @@ class _HomePageState extends State<HomePage> {
               title: Text("Order ID: ${currOrder['id']}"),
               subtitle: Text("Status = ${currOrder['orderStatus']}"),
               trailing: currOrder['orderStatus'] == "DELIVERED"
-                  ? Container()
+                  ? const SizedBox(width: 0)
                   : OutlinedButton(
                       child: const Text("Open"),
                       onPressed: () {

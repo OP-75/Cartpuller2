@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-
 import com.hitesh.cartpuller2.user.User;
 import com.hitesh.cartpuller2.user.service.UserService;
 import com.hitesh.cartpuller2.vegetable.Vegetable;
@@ -60,6 +59,10 @@ public class OrderService {
 
     public List<Order> getOrderByRiderEmail(String riderEmail) {
         return orderRepository.findByRiderEmail(riderEmail);
+    }
+
+    public List<Order> getOrderByCustomerEmail(String customerEmail) {
+        return orderRepository.findByCustomerEmail(customerEmail);
     }
 
     public Order updateOrder(Order newOrder) {

@@ -19,7 +19,8 @@ Future<List<Vegetable>> getVegetables() async {
       },
     );
 
-    if (response.statusCode == 403) {
+    if (response.statusCode == HttpStatus.forbidden ||
+        response.statusCode == HttpStatus.unauthorized) {
       dev.log(
           "Vegetables API call response code: ${response.statusCode.toString()}");
       throw const InvalidTokenException("Please Login");

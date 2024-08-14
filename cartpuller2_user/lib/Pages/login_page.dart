@@ -1,7 +1,8 @@
+import 'package:cartpuller2_user/API_calls/check_token_validity.dart';
 import 'package:cartpuller2_user/API_calls/login_request.dart';
 import 'package:cartpuller2_user/constants.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as developer;
+import 'dart:developer' as dev;
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -16,6 +17,8 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _loginIfExistingTokenValid(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -69,7 +72,7 @@ class LoginPage extends StatelessWidget {
                 child: ElevatedButton(
                   style: const ButtonStyle(
                     backgroundColor:
-                        MaterialStatePropertyAll<Color>(Colors.lightBlue),
+                        WidgetStatePropertyAll<Color>(Colors.lightBlue),
                   ),
                   child: const Text(
                     'Log in ',
@@ -119,7 +122,7 @@ class LoginPage extends StatelessWidget {
 
     try {
       Token responseTokens = await login(loginForm);
-      developer.log(responseTokens.toString());
+      dev.log(responseTokens.toString());
       if (responseTokens.error != null) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +146,17 @@ class LoginPage extends StatelessWidget {
         }
       }
     } catch (e) {
-      developer.log("Error in handleSignup(): ${e.toString()}");
+      dev.log("Error in handleSignup(): ${e.toString()}");
+    }
+  }
+
+  Future<void> _loginIfExistingTokenValid(BuildContext context) async {
+    try {
+      if (await isTokenValid() && context.mounted) {
+        Navigator.of(context).popAndPushNamed("/home");
+      }
+    } catch (e) {
+      //do nothing
     }
   }
 }

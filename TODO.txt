@@ -12,3 +12,7 @@ Inside timer (started in init()) instead of calling setState() periodically and 
 Add a permanent warning on order_details_page that the cartpuller location might change when they click on track button, to get updated coordinates of cartpuller come back to our app and click track again
 
 Rider & cartpuller cant deactiavte themselves if they have active orders
+
+Logout button
+
+Some fields on user side in order details can be null so need to test/write code with that

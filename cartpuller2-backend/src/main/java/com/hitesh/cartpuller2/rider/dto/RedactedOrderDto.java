@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class RiderOrderRedactedDto {
+public class RedactedOrderDto {
     @Id
     @MongoId
     private String id;

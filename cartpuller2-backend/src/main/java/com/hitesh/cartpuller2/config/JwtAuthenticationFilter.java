@@ -38,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
+        @SuppressWarnings("unused")
         final Set<Role> authories;
 
         if (StringUtils.isEmpty(authHeader) || !authHeader.startsWith("Bearer ")) {
