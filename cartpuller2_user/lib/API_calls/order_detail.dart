@@ -12,6 +12,8 @@ Future<Map<String, dynamic>> getOrderDetails(String orderId) async {
   try {
     String token = await getAuthToken();
 
+    dev.log(token);
+
     final response = await http.get(
       Uri.parse('$SERVER_URL/api/customer/order-details/$orderId'),
       headers: <String, String>{

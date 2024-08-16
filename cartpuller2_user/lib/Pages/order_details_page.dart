@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:cartpuller2_user/API_calls/order_detail.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:developer' as dev;
+
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   const OrderDetailsPage({super.key});
@@ -13,6 +16,7 @@ class OrderDetailsPage extends StatefulWidget {
 
 class _OrderDetailsPageState extends State<OrderDetailsPage> {
   StreamController? _dataStreamController;
+  PanelController _panelController = PanelController();
   Timer? _timer;
   String? _orderId;
 
@@ -52,16 +56,21 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           body: StreamBuilder(
             stream: _dataStreamController?.stream,
             builder: (context, snapshot) {
-              dev.log(snapshot.connectionState.toString());
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
               } else {
                 if (snapshot.hasData) {
-                  return Column(
-                    children: [
-                      _displayData(snapshot.data!, context),
-                    ],
-                  );
+                  return SlidingUpPanel(
+                      controller: _panelController,
+                      panel: Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: Column(
+                          children: [
+                            _displayData(snapshot.data!),
+                          ],
+                        ),
+                      ),
+                      body: _displayMap(snapshot.data!));
                 } else if (snapshot.hasError) {
                   return Text(snapshot.error!.toString());
                 } else {
@@ -85,13 +94,19 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     });
   }
 
-  Widget _displayData(Map<String, dynamic> order, BuildContext context) {
+  Widget _displayData(Map<String, dynamic> order) {
     List<TableRow> tableRows = [];
     List<TableRow> orderDetailsRow = [];
     TableRow emptyRow = const TableRow(children: [Text(""), Text("")]);
 
     tableRows.add(TableRow(
         children: [const Text("Order ID"), Text(order["id"] as String)]));
+    tableRows.add(emptyRow);
+
+    tableRows.add(TableRow(children: [
+      const Text("Order status"),
+      Text(order["orderStatus"] as String)
+    ]));
     tableRows.add(emptyRow);
 
     //show order details
@@ -111,12 +126,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       Table(
         children: orderDetailsRow,
       )
-    ]));
-    tableRows.add(emptyRow);
-
-    tableRows.add(TableRow(children: [
-      const Text("Order status"),
-      Text(order["orderStatus"] as String)
     ]));
     tableRows.add(emptyRow);
 
@@ -163,6 +172,20 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _displayMap(Map<String, dynamic> order) {
+    double lat = double.parse(order["deliveryLatitude"]);
+    double long = double.parse(order["deliveryLongitude"]);
+    CameraPosition initPosition = CameraPosition(
+      target: LatLng(lat, long),
+      zoom: 14,
+    );
+
+    return GoogleMap(
+      mapType: MapType.normal,
+      initialCameraPosition: initPosition,
     );
   }
 }

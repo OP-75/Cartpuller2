@@ -74,8 +74,14 @@ public class CustomerService {
 
     private DetailedOrderDto getRiderOrderDetailedDto(Order order) {
 
-        User cartpuller = userService.getUserByEmail(order.getCartpullerEmail());
-        User rider = userService.getUserByEmail(order.getRiderEmail());
+        User cartpuller = new User(null); // initailze as empty object
+        if (order.getCartpullerEmail() != null) {
+            cartpuller = userService.getUserByEmail(order.getCartpullerEmail());
+        }
+        User rider = new User(null);
+        if (order.getRiderEmail() != null) {
+            rider = userService.getUserByEmail(order.getRiderEmail());
+        }
 
         String cartpullerLatitude = null;
         String cartpullerLongitude = null;
@@ -103,10 +109,13 @@ public class CustomerService {
             log.error("Error in getting active rider", e);
         }
 
-        return new DetailedOrderDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
+        DetailedOrderDto dto = new DetailedOrderDto(order.getId(), order.getOrderDetails(),
+                order.getVegetableDetailMap(),
                 order.getOrderStatus(), cartpuller.getName(), cartpuller.getPhoneNumber(), cartpullerLatitude,
                 cartpullerLongitude, rider.getName(), rider.getPhoneNumber(), riderLatitude, riderLongitude,
                 order.getDeliveryAddress(), order.getDeliveryLatitude(), order.getDeliveryLongitude());
+
+        return dto;
     }
 
     private RedactedOrderDto getRedactedDto(Order order) {
