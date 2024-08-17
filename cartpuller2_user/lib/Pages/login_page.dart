@@ -1,5 +1,6 @@
 import 'package:cartpuller2_user/API_calls/check_token_validity.dart';
 import 'package:cartpuller2_user/API_calls/login_request.dart';
+import 'package:cartpuller2_user/Helper_functions/delete_tokens.dart';
 import 'package:cartpuller2_user/constants.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev;
@@ -129,8 +130,7 @@ class LoginPage extends StatelessWidget {
               SnackBar(content: Text("Error: ${responseTokens.error}")));
         }
       } else {
-        await storage.delete(key: TOKEN);
-        await storage.delete(key: REFRESH_TOKEN);
+        await deleteAllToken();
         // Write JWT in storage
         await storage.write(key: TOKEN, value: responseTokens.accessToken);
         await storage.write(

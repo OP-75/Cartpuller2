@@ -13,8 +13,6 @@ Add a permanent warning on order_details_page that the cartpuller location might
 
 Rider & cartpuller cant deactiavte themselves if they have active orders
 
-Logout button
-
-Some fields on user side in order details can be null so need to test/write code with that
+Logout button for rider & cartpuller
 
 Dockerise Backend

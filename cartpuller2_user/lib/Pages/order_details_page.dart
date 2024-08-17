@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:cartpuller2_user/API_calls/order_detail.dart';
+import 'package:cartpuller2_user/Helper_functions/map_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:developer' as dev;
 
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:widget_to_marker/widget_to_marker.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   const OrderDetailsPage({super.key});
@@ -20,6 +22,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   Timer? _timer;
   String? _orderId;
 
+  BitmapDescriptor? _homeIcon;
+  BitmapDescriptor? _cartpullerIcon;
+  BitmapDescriptor? _riderIcon;
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +33,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     // Create a stream controller and add numbers to the stream.
     _dataStreamController = StreamController();
     _startFetchingData(); // Start adding numbers to the stream.
+    _loadMapMarkerIcons();
   }
 
   @override
@@ -47,6 +54,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
     return PopScope(
       onPopInvoked: (didPop) {
+        _timer?.cancel();
+        _dataStreamController?.close();
         ScaffoldMessenger.of(context).clearMaterialBanners();
       },
       child: Scaffold(
@@ -99,13 +108,15 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     List<TableRow> orderDetailsRow = [];
     TableRow emptyRow = const TableRow(children: [Text(""), Text("")]);
 
-    tableRows.add(TableRow(
-        children: [const Text("Order ID"), Text(order["id"] as String)]));
+    tableRows.add(TableRow(children: [
+      const Text("Order ID"),
+      Text(_convertToString(order["id"]))
+    ]));
     tableRows.add(emptyRow);
 
     tableRows.add(TableRow(children: [
       const Text("Order status"),
-      Text(order["orderStatus"] as String)
+      Text(_convertToString(order["orderStatus"]))
     ]));
     tableRows.add(emptyRow);
 
@@ -117,7 +128,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     for (String vegetableId in order["orderDetails"].keys) {
       orderDetailsRow.add(TableRow(children: [
         Text(order["vegetableDetailMap"][vegetableId]["title"]),
-        Text(order["orderDetails"][vegetableId].toString()),
+        Text(_convertToString(order["orderDetails"][vegetableId])),
       ]));
     }
 
@@ -131,31 +142,31 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
     tableRows.add(TableRow(children: [
       const Text("Seller name"),
-      Text(order["cartpullerName"] as String)
+      Text(_convertToString(order["cartpullerName"]))
     ]));
     tableRows.add(emptyRow);
 
     tableRows.add(TableRow(children: [
       const Text("Seller Number"),
-      Text(order["cartpullerNumber"] as String)
+      Text(_convertToString(order["cartpullerNumber"]))
     ]));
     tableRows.add(emptyRow);
 
     tableRows.add(TableRow(children: [
       const Text("Rider Name"),
-      Text(order["riderName"] as String)
+      Text(_convertToString(order["riderName"]))
     ]));
     tableRows.add(emptyRow);
 
     tableRows.add(TableRow(children: [
       const Text("Rider number"),
-      Text(order["riderNumber"] as String)
+      Text(_convertToString(order["riderNumber"]))
     ]));
     tableRows.add(emptyRow);
 
     tableRows.add(TableRow(children: [
       const Text("Delivery address"),
-      Text(order["deliveryAddress"] as String)
+      Text(_convertToString(order["deliveryAddress"]))
     ]));
     tableRows.add(emptyRow);
 
@@ -175,17 +186,94 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     );
   }
 
+  String _convertToString(dynamic val) {
+    if (val == null) {
+      return "";
+    } else {
+      return val.toString();
+    }
+  }
+
   Widget _displayMap(Map<String, dynamic> order) {
+    Set<Marker> markers = {};
+
+    //mark delivery location
     double lat = double.parse(order["deliveryLatitude"]);
     double long = double.parse(order["deliveryLongitude"]);
+    LatLng deliveryLatLng = LatLng(lat, long);
+    markers.add(Marker(
+        markerId: const MarkerId("Delivery location"),
+        position: deliveryLatLng,
+        icon: _homeIcon ?? BitmapDescriptor.defaultMarker));
+
+    //mark cartpuller location
+    if (order["cartpullerLatitude"] != null &&
+        order["cartpullerLongitude"] != null) {
+      double lat = double.parse(order["cartpullerLatitude"]);
+      double long = double.parse(order["cartpullerLongitude"]);
+      LatLng cartpullerLatLng = LatLng(lat, long);
+      markers.add(Marker(
+          markerId: const MarkerId("Cartpuller location"),
+          position: cartpullerLatLng,
+          icon: _cartpullerIcon ?? BitmapDescriptor.defaultMarker));
+    }
+
+    //mark rider location
+    if (order["riderLatitude"] != null && order["riderLongitude"] != null) {
+      double lat = double.parse(order["riderLatitude"]);
+      double long = double.parse(order["riderLongitude"]);
+      LatLng riderLatLng = LatLng(lat, long);
+      markers.add(Marker(
+          markerId: const MarkerId("Rider location"),
+          position: riderLatLng,
+          icon: _riderIcon ?? BitmapDescriptor.defaultMarker));
+    }
+
     CameraPosition initPosition = CameraPosition(
-      target: LatLng(lat, long),
+      target: deliveryLatLng,
       zoom: 14,
     );
 
     return GoogleMap(
-      mapType: MapType.normal,
-      initialCameraPosition: initPosition,
-    );
+        mapType: MapType.normal,
+        initialCameraPosition: initPosition,
+        onMapCreated: (GoogleMapController controller) {
+          controller.getVisibleRegion();
+
+          Future.delayed(
+              const Duration(milliseconds: 200),
+              () => controller.animateCamera(CameraUpdate.newLatLngBounds(
+                  MapUtils.boundsFromLatLngList(markers), 170)));
+        },
+        markers: markers);
+  }
+
+  void _loadMapMarkerIcons() {
+    const double logicalSize = 110;
+    const double imageSize = 300;
+    const Icon(Icons.home)
+        .toBitmapDescriptor(
+            logicalSize: const Size(logicalSize, logicalSize),
+            imageSize: const Size(imageSize, imageSize),
+            waitToRender: Duration.zero)
+        .then((icon) {
+      _homeIcon = icon;
+    });
+    const Icon(Icons.store)
+        .toBitmapDescriptor(
+            logicalSize: const Size(logicalSize, logicalSize),
+            imageSize: const Size(imageSize, imageSize),
+            waitToRender: Duration.zero)
+        .then((icon) {
+      _cartpullerIcon = icon;
+    });
+    const Icon(Icons.motorcycle)
+        .toBitmapDescriptor(
+            logicalSize: const Size(logicalSize, logicalSize),
+            imageSize: const Size(imageSize, imageSize),
+            waitToRender: Duration.zero)
+        .then((icon) {
+      _riderIcon = icon;
+    });
   }
 }

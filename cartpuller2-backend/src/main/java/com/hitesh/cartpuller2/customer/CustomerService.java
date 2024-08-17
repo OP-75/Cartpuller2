@@ -89,22 +89,27 @@ public class CustomerService {
         String riderLongitude = null;
 
         try {
-            // for live cartpuller location
-            ActiveCartpuller activeCartpullerDetails = cartpullerService
-                    .getActiveCartpuller(order.getCartpullerEmail());
+            if (order.getCartpullerEmail() != null) {
+                // for live cartpuller location
+                ActiveCartpuller activeCartpullerDetails = cartpullerService
+                        .getActiveCartpuller(order.getCartpullerEmail());
 
-            cartpullerLatitude = activeCartpullerDetails.getLatitude();
-            cartpullerLongitude = activeCartpullerDetails.getLongitude();
+                cartpullerLatitude = activeCartpullerDetails.getLatitude();
+                cartpullerLongitude = activeCartpullerDetails.getLongitude();
+            }
 
         } catch (Exception e) {
             log.error("Error in getting active cartpuller", e);
         }
 
         try {
-            // for live cartpuller location
-            ActiveRider activeRiderDetails = riderService.getActiveRiderByEmail(order.getRiderEmail());
-            riderLatitude = activeRiderDetails.getLatitude();
-            riderLongitude = activeRiderDetails.getLongitude();
+            if (order.getRiderEmail() != null) {
+                // for live cartpuller location
+                ActiveRider activeRiderDetails = riderService.getActiveRiderByEmail(order.getRiderEmail());
+                riderLatitude = activeRiderDetails.getLatitude();
+                riderLongitude = activeRiderDetails.getLongitude();
+            }
+
         } catch (Exception e) {
             log.error("Error in getting active rider", e);
         }

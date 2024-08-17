@@ -3,6 +3,7 @@ import 'package:cartpuller2_user/API_calls/past_orders.dart';
 import 'package:cartpuller2_user/API_calls/vegetable.dart';
 import 'package:cartpuller2_user/Custom_exceptions/empty_cart.dart';
 import 'package:cartpuller2_user/Custom_exceptions/invalid_token.dart';
+import 'package:cartpuller2_user/Helper_functions/delete_tokens.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev;
 
@@ -34,6 +35,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Cartpuller"),
+        actions: [_logoutButton(context)],
       ),
       body: _getSelectedPageWidget(context),
       bottomNavigationBar: BottomNavigationBar(
@@ -315,5 +317,17 @@ class _HomePageState extends State<HomePage> {
           .showSnackBar(SnackBar(content: Text(e.toString())));
       rethrow;
     }
+  }
+
+  _logoutButton(BuildContext context) {
+    return IconButton(
+        onPressed: () async {
+          await deleteAllToken();
+          if (context.mounted) {
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil("/login", (route) => false);
+          }
+        },
+        icon: const Icon(Icons.logout));
   }
 }
