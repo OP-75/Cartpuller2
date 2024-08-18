@@ -164,6 +164,7 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<finalName>cartpuller2</finalName>
 		<plugins>
 			<plugin>
 				<groupId>

@@ -1,0 +1,51 @@
+services:
+  app:
+    build: .
+    container_name: spring_boot_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/Cartpuller2
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017" # Output_port:input_port
+    volumes:
+      - mongo_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+
+  redis:
+    image: redis:7.0
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+  
+  test:
+    #this container checks the conectivity with redis docker container
+    image: alpine
+    depends_on:
+      - redis
+    command: sh -c "apk add --no-cache redis && redis-cli -h redis ping"
+
+    
+
+volumes:
+  mongo_data:
+  redis_data:
