@@ -41,7 +41,7 @@ void onStart(ServiceInstance service) async {
     await service.stopSelf();
   });
 
-  Timer.periodic(const Duration(seconds: 1), (timer) async {
+  Timer.periodic(const Duration(seconds: 10), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         //TODO: can use geolocator here to send location every time position changes by 100m instead of every second

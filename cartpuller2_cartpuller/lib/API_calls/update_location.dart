@@ -30,6 +30,9 @@ Future<String> sendCartpullerLocation(Map<String, String> location) async {
       final errorJson = jsonDecode(response.body);
       throw InactiveUserException(errorJson["error"] as String);
     }
+    if (response.statusCode == HttpStatus.tooManyRequests) {
+      throw Exception("Ngrok: Too many requests");
+    }
 
     dev.log(response.body);
     return response.body;
