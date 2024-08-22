@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-Cartpuller2Application<cartpuller2>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.hitesh.cartpuller2.Cartpuller2Application",
+            "projectName": "cartpuller2",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
