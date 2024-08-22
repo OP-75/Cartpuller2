@@ -11,7 +11,7 @@ Note: App has been made & tested for android
 
 Run ngrok reverse proxy after installation:
 ngrok http --domain=insect-ready-minnow.ngrok-free.app 8080
-(make sure to update the url in all 3 apps after running ngrok)
+(make sure to update the url in `constant.dart` in all 3 apps after running ngrok)
 (replace the `--domain` link by you own ngrok static site)
 
 Bug: Ngrok throttles the connections per minute so you might encounter an error while using the app
