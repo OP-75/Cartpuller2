@@ -15,4 +15,4 @@ Rider & cartpuller cant deactiavte themselves if they have active orders
 
 Logout button for rider & cartpuller
 
-Dockerise Backend
+Ngrok throttles connections per minute try switching to localtunnel.me or throttle the `Timers` use for polling in all the apps 
