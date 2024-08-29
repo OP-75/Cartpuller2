@@ -19,6 +19,7 @@ import com.hitesh.cartpuller2.rider.dto.DetailedOrderDto;
 import com.hitesh.cartpuller2.rider.dto.RedactedOrderDto;
 import com.hitesh.cartpuller2.rider.exception.AuthorizationException;
 import com.hitesh.cartpuller2.rider.exception.BadRequestException;
+import com.hitesh.cartpuller2.rider.exception.RiderDeactivationFailedException;
 import com.hitesh.cartpuller2.rider.exception.RiderAlreadyAssignedException;
 import com.hitesh.cartpuller2.rider.exception.RiderInactiveException;
 import com.hitesh.cartpuller2.service.HelperService;
@@ -76,6 +77,10 @@ public class RiderService {
 
     public void deactivateRider(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
+
+        if (orderService.doesRiderHaveActiveOrders(email)) {
+            throw new RiderDeactivationFailedException("Deactivation unsucessful, you still have active orders");
+        }
 
         Optional<ActiveRider> optionalRider = activeRiderRepository.findByEmail(email);
         if (optionalRider.isPresent()) {

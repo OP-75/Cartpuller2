@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
 import com.hitesh.cartpuller2.cartpuller.exception.CartpullerNotActivatedException;
 import com.hitesh.cartpuller2.cartpuller.exception.CartpullerOrderAlreadyAcceptedException;
+import com.hitesh.cartpuller2.cartpuller.exception.CartpullerDeactivationFailedException;
 import com.hitesh.cartpuller2.global.dto.Activity;
 import com.hitesh.cartpuller2.global.dto.Location;
 import com.hitesh.cartpuller2.order.Order;
@@ -66,6 +67,10 @@ public class CartpullerService {
 
     public void deactivateCartpuller(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
+
+        if (orderService.doesCartpullerHaveActiveOrders(email)) {
+            throw new CartpullerDeactivationFailedException("Deactivation unsucessful, you still have active orders");
+        }
 
         Optional<ActiveCartpuller> optionalCartpuller = activeCartpullerRepository.findByEmail(email);
         if (optionalCartpuller.isPresent()) {

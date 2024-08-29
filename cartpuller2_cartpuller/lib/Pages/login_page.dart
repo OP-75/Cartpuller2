@@ -35,8 +35,8 @@ class LoginPage extends StatelessWidget {
                     height: 100,
                     child: Center(
                         child: Text(
-                      "Cartpuller Rider",
-                      style: TextStyle(fontSize: 40),
+                      "Cartpuller Vendor",
+                      style: TextStyle(fontSize: 35),
                     )),
                   ),
                 )),

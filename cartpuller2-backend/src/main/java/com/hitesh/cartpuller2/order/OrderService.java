@@ -1,5 +1,6 @@
 package com.hitesh.cartpuller2.order;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,26 @@ public class OrderService {
         String orderId = newOrder.getId();
         orderRepository.deleteById(orderId);
         return orderRepository.save(newOrder);
+    }
+
+    public boolean doesCartpullerHaveActiveOrders(String cartpullerEmail) {
+        List<Order> activeOrders = new ArrayList<>();
+
+        activeOrders.addAll(orderRepository.findByCartpullerEmailAndOrderStatus(cartpullerEmail, OrderStatus.ACCEPTED));
+        activeOrders.addAll(
+                orderRepository.findByCartpullerEmailAndOrderStatus(cartpullerEmail, OrderStatus.RIDER_ASSIGNED));
+
+        return !activeOrders.isEmpty();
+    }
+
+    public boolean doesRiderHaveActiveOrders(String riderEmail) {
+        List<Order> activeOrders = new ArrayList<>();
+
+        activeOrders.addAll(orderRepository.findByRiderEmailAndOrderStatus(riderEmail, OrderStatus.RIDER_ASSIGNED));
+        activeOrders
+                .addAll(orderRepository.findByRiderEmailAndOrderStatus(riderEmail, OrderStatus.DELIVERY_IN_PROGRESS));
+
+        return !activeOrders.isEmpty();
     }
 
 }

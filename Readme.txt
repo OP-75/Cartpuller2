@@ -15,3 +15,12 @@ ngrok http --domain=insect-ready-minnow.ngrok-free.app 8080
 (replace the `--domain` link by you own ngrok static site)
 
 Bug: Ngrok throttles the connections per minute so you might encounter an error while using the app
+
+Order Flow:
+
+SENT 
+  -> ACCEPTED (Accepted by cartpuller)
+  -> RIDER_ASSIGNED (Rider is assigned, but order is not picked up by rider)
+  -> DELIVERY_IN_PROGRESS (Rider has picked up the order from cartpuller; cartpuller is no longer involved in fulfilling the order)
+  -> DELIVERED (Order has been delivered to the customer)
+

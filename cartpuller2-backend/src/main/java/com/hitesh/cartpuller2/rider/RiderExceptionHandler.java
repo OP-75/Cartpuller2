@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.hitesh.cartpuller2.rider.exception.RiderDeactivationFailedException;
 import com.hitesh.cartpuller2.global.data.ErrorResponse;
 import com.hitesh.cartpuller2.rider.exception.AuthorizationException;
 import com.hitesh.cartpuller2.rider.exception.BadRequestException;
@@ -38,5 +40,10 @@ public class RiderExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse> noSuchElementException(Exception e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Requested resource not found"));
+    }
+
+    @ExceptionHandler(RiderDeactivationFailedException.class)
+    public ResponseEntity<ErrorResponse> handleDeactivationFailedException(Exception e) {
+        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }
