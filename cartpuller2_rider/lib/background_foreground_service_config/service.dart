@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'dart:developer' as dev;
 
 import 'package:cartpuller2_rider/API_calls/update_location.dart';
-import 'package:cartpuller2_rider/Helper_functions/determine_user_position.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:geolocator/geolocator.dart';
@@ -41,18 +40,20 @@ void onStart(ServiceInstance service) async {
     await service.stopSelf();
   });
 
-  Timer.periodic(const Duration(seconds: 10), (timer) async {
+  const locationSettings =
+      LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 100);
+
+  Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+      (Position pos) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
-        //TODO: can use geolocator here to send location every time position changes by 100m instead of every second
         try {
-          Position pos = await determinePosition();
           Map<String, String> location = {
             "latitude": pos.latitude.toString(),
             "longitude": pos.longitude.toString(),
           };
           await updateRiderLocation(location);
-          dev.log(pos.toString());
+          dev.log("Foreground service position stream: ${pos.toString()}");
         } catch (e) {
           // if we get an exception (like "cartpuller is inactive" exception then stop the service)
           try {
@@ -66,6 +67,8 @@ void onStart(ServiceInstance service) async {
         }
       }
     }
+  }, onError: (error) {
+    dev.log("positionStream error: ${error.toString()}");
   });
 }
 
