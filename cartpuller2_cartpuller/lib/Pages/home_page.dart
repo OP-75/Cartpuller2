@@ -11,6 +11,7 @@ import 'package:cartpuller2_cartpuller/Custom_exceptions/bad_request.dart';
 import 'package:cartpuller2_cartpuller/Custom_exceptions/inactive.dart';
 import 'package:cartpuller2_cartpuller/Custom_exceptions/invalid_token.dart';
 import 'package:cartpuller2_cartpuller/Custom_exceptions/order_already_accepted.dart';
+import 'package:cartpuller2_cartpuller/Helper_functions/delete_all_tokens.dart';
 import 'package:cartpuller2_cartpuller/Helper_functions/determine_user_position.dart';
 import 'package:cartpuller2_cartpuller/background_foreground_service_config/service.dart';
 import 'package:flutter/material.dart';
@@ -74,6 +75,7 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             tooltip: "Click to toggle store is closed or open",
           ),
+          _logoutButton(context),
         ],
       ),
       body: _getWidgetOfSelectedIndex(_selectedIndex, context),
@@ -381,5 +383,17 @@ class _HomePageState extends State<HomePage> {
         return Text(
             "_getWidgetOfSelectedIndex() Error: Index $index isnt know");
     }
+  }
+
+  _logoutButton(BuildContext context) {
+    return IconButton(
+        onPressed: () async {
+          await deleteAllToken();
+          if (context.mounted) {
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil("/login", (route) => false);
+          }
+        },
+        icon: const Icon(Icons.logout));
   }
 }

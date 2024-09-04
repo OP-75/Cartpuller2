@@ -11,6 +11,7 @@ import 'package:cartpuller2_rider/Custom_exceptions/bad_request.dart';
 import 'package:cartpuller2_rider/Custom_exceptions/inactive.dart';
 import 'package:cartpuller2_rider/Custom_exceptions/invalid_token.dart';
 import 'package:cartpuller2_rider/Custom_exceptions/order_already_accepted.dart';
+import 'package:cartpuller2_rider/Helper_functions/delete_all_tokens.dart';
 import 'package:cartpuller2_rider/Helper_functions/determine_user_position.dart';
 import 'package:cartpuller2_rider/background_foreground_service_config/service.dart';
 import 'package:flutter/cupertino.dart';
@@ -88,6 +89,7 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             tooltip: "Click to toggle active status",
           ),
+          _logoutButton(context)
         ],
       ),
       body: _getWidgetOfSelectedIndex(_selectedIndex, context),
@@ -453,5 +455,17 @@ class _HomePageState extends State<HomePage> {
       double distInKm = distInMeters / 1000;
       return distInKm.toStringAsFixed(1);
     }
+  }
+
+  _logoutButton(BuildContext context) {
+    return IconButton(
+        onPressed: () async {
+          await deleteAllToken();
+          if (context.mounted) {
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil("/login", (route) => false);
+          }
+        },
+        icon: const Icon(Icons.logout));
   }
 }

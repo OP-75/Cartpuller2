@@ -24,6 +24,6 @@ Future<bool> isTokenValid() async {
     }
   } catch (e) {
     dev.log("isTokenValid() API call: ${e.toString()}");
-    rethrow;
+    return false;
   }
 }

@@ -92,7 +92,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           backgroundColor: Colors.orange[400],
           leading: const Icon(Icons.warning_amber_outlined),
           content: const Text(
-            "The location of seller may change when you use the 'Track' button and open the route in Google Maps",
+            "The location of seller may change when you use the 'Track' button and open the route, to get updated coordinates of cartpuller come back to our app and click 'Track' again",
             style: TextStyle(color: Colors.black),
           ),
           actions: [
