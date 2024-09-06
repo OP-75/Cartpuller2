@@ -3,14 +3,14 @@ package com.hitesh.cartpuller2.customer;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import com.hitesh.cartpuller2.cartpuller.ActiveCartpuller;
 import com.hitesh.cartpuller2.cartpuller.CartpullerService;
+import com.hitesh.cartpuller2.cartpuller.dto.ActiveCartpullerDto;
 import com.hitesh.cartpuller2.customer.dto.DetailedOrderDto;
-import com.hitesh.cartpuller2.order.Order;
 import com.hitesh.cartpuller2.order.OrderService;
 import com.hitesh.cartpuller2.order.OrderStatus;
-import com.hitesh.cartpuller2.rider.ActiveRider;
+import com.hitesh.cartpuller2.order.dto.OrderDto;
 import com.hitesh.cartpuller2.rider.RiderService;
+import com.hitesh.cartpuller2.rider.dto.ActiveRiderDto;
 import com.hitesh.cartpuller2.rider.dto.RedactedOrderDto;
 import com.hitesh.cartpuller2.rider.exception.AuthorizationException;
 import com.hitesh.cartpuller2.service.HelperService;
@@ -35,10 +35,10 @@ public class CustomerService {
     public List<RedactedOrderDto> getPastOrders(HttpServletRequest request) {
         String customerEmail = helperService.getEmailFromRequest(request);
 
-        List<Order> orders = orderService.getOrderByCustomerEmail(customerEmail);
+        List<OrderDto> orders = orderService.getOrderByCustomerEmail(customerEmail);
 
         List<RedactedOrderDto> dtos = new ArrayList<>();
-        for (Order order : orders) {
+        for (OrderDto order : orders) {
             dtos.add(getRedactedDto(order));
         }
 
@@ -51,7 +51,7 @@ public class CustomerService {
         // Deliveredif it is delivered then null the location of cartpuller and rider
 
         String customerEmail = helperService.getEmailFromRequest(request);
-        Order order = orderService.getByOrderId(orderId);
+        OrderDto order = orderService.getDtoByOrderId(orderId);
 
         if (order.getCustomerEmail().equals(customerEmail)) {
 
@@ -72,7 +72,7 @@ public class CustomerService {
 
     }
 
-    private DetailedOrderDto getRiderOrderDetailedDto(Order order) {
+    private DetailedOrderDto getRiderOrderDetailedDto(OrderDto order) {
 
         User cartpuller = new User(null); // initailze as empty object
         if (order.getCartpullerEmail() != null) {
@@ -91,7 +91,7 @@ public class CustomerService {
         try {
             if (order.getCartpullerEmail() != null) {
                 // for live cartpuller location
-                ActiveCartpuller activeCartpullerDetails = cartpullerService
+                ActiveCartpullerDto activeCartpullerDetails = cartpullerService
                         .getActiveCartpuller(order.getCartpullerEmail());
 
                 cartpullerLatitude = activeCartpullerDetails.getLatitude();
@@ -104,8 +104,8 @@ public class CustomerService {
 
         try {
             if (order.getRiderEmail() != null) {
-                // for live cartpuller location
-                ActiveRider activeRiderDetails = riderService.getActiveRiderByEmail(order.getRiderEmail());
+                // for live rider location
+                ActiveRiderDto activeRiderDetails = riderService.getActiveRiderByEmail(order.getRiderEmail());
                 riderLatitude = activeRiderDetails.getLatitude();
                 riderLongitude = activeRiderDetails.getLongitude();
             }
@@ -123,7 +123,7 @@ public class CustomerService {
         return dto;
     }
 
-    private RedactedOrderDto getRedactedDto(Order order) {
+    private RedactedOrderDto getRedactedDto(OrderDto order) {
         return new RedactedOrderDto(order.getId(), order.getOrderStatus());
     }
 

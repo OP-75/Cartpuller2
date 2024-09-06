@@ -13,3 +13,6 @@ db.Vegetables.insertMany([
   { "title": "Potato", "price": 7},
   { "title": "Avacado", "price": 108}
 ]);
+
+//added later, check if it throws ant error
+db.collection.createIndex( { deliveryLocation : "2dsphere" } )

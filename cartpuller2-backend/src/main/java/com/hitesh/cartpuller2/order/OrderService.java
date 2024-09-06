@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
+
+import com.hitesh.cartpuller2.order.dto.OrderDto;
 import com.hitesh.cartpuller2.user.User;
 import com.hitesh.cartpuller2.user.service.UserService;
 import com.hitesh.cartpuller2.vegetable.Vegetable;
@@ -21,7 +25,7 @@ public class OrderService {
     private final VegetableService vegetableService;
     private final UserService userService;
 
-    public Order createOrder(Map<String, Integer> cart, String customerEmail) {
+    public OrderDto createOrder(Map<String, Integer> cart, String customerEmail) {
 
         User user = userService.getUserByEmail(customerEmail);
 
@@ -38,40 +42,51 @@ public class OrderService {
         order.setCustomerEmail(customerEmail);
         order.setOrderStatus(OrderStatus.SENT);
         order.setDeliveryAddress(user.getAddress());
-        order.setDeliveryLatitude(user.getLatitude());
-        order.setDeliveryLongitude(user.getLongitude());
+
+        double x = Double.parseDouble(user.getLongitude());
+        double y = Double.parseDouble(user.getLatitude());
+
+        order.setDeliveryLocation(new GeoJsonPoint(x, y));
 
         order = orderRepository.save(order);
 
-        return order;
+        return getOrderDto(order);
     }
 
-    public List<Order> getByOrderStatus(OrderStatus status) {
-        return orderRepository.findByOrderStatus(status);
+    public List<OrderDto> getByOrderStatus(OrderStatus status) {
+        return orderRepository.findByOrderStatus(status).stream().map((order) -> getOrderDto(order))
+                .collect(Collectors.toList());
     }
 
     public Order getByOrderId(String id) {
         return orderRepository.findById(id).orElseThrow();
     }
 
-    public List<Order> getOrderByCartpullerEmail(String cartpullerEmail) {
-        return orderRepository.findByCartpullerEmail(cartpullerEmail);
+    public OrderDto getDtoByOrderId(String id) {
+        return getOrderDto(orderRepository.findById(id).orElseThrow());
     }
 
-    public List<Order> getOrderByRiderEmail(String riderEmail) {
-        return orderRepository.findByRiderEmail(riderEmail);
+    public List<OrderDto> getOrderByCartpullerEmail(String cartpullerEmail) {
+        return orderRepository.findByCartpullerEmail(cartpullerEmail).stream().map((order) -> getOrderDto(order))
+                .collect(Collectors.toList());
     }
 
-    public List<Order> getOrderByCustomerEmail(String customerEmail) {
-        return orderRepository.findByCustomerEmail(customerEmail);
+    public List<OrderDto> getOrderByRiderEmail(String riderEmail) {
+        return orderRepository.findByRiderEmail(riderEmail).stream().map((order) -> getOrderDto(order))
+                .collect(Collectors.toList());
     }
 
-    public Order updateOrder(Order newOrder) {
+    public List<OrderDto> getOrderByCustomerEmail(String customerEmail) {
+        return orderRepository.findByCustomerEmail(customerEmail).stream().map((order) -> getOrderDto(order))
+                .collect(Collectors.toList());
+    }
+
+    public OrderDto updateOrder(Order newOrder) {
         // since repository has no way to update order we will delete and then save new
         // order
         String orderId = newOrder.getId();
         orderRepository.deleteById(orderId);
-        return orderRepository.save(newOrder);
+        return getOrderDto(orderRepository.save(newOrder));
     }
 
     public boolean doesCartpullerHaveActiveOrders(String cartpullerEmail) {
@@ -92,6 +107,27 @@ public class OrderService {
                 .addAll(orderRepository.findByRiderEmailAndOrderStatus(riderEmail, OrderStatus.DELIVERY_IN_PROGRESS));
 
         return !activeOrders.isEmpty();
+    }
+
+    public OrderDto getOrderDto(Order order) {
+        if (order == null) {
+            return null;
+        }
+
+        OrderDto orderDto = new OrderDto();
+        orderDto.setId(order.getId());
+        orderDto.setOrderDetails(order.getOrderDetails());
+        orderDto.setVegetableDetailMap(order.getVegetableDetailMap());
+        orderDto.setCustomerEmail(order.getCustomerEmail());
+        orderDto.setOrderStatus(order.getOrderStatus());
+        orderDto.setRiderEmail(order.getRiderEmail());
+        orderDto.setCartpullerEmail(order.getCartpullerEmail());
+        orderDto.setDeliveryAddress(order.getDeliveryAddress());
+
+        orderDto.setDeliveryLatitude(String.valueOf(order.getDeliveryLocation().getY()));
+        orderDto.setDeliveryLongitude(String.valueOf(order.getDeliveryLocation().getX()));
+
+        return orderDto;
     }
 
 }

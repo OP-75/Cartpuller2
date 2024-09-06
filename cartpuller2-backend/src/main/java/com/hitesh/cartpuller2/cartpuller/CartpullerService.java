@@ -5,9 +5,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
 
-import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
+import com.hitesh.cartpuller2.cartpuller.dto.ActiveCartpullerDto;
+import com.hitesh.cartpuller2.cartpuller.dto.CartpullerOrderDto;
 import com.hitesh.cartpuller2.cartpuller.exception.CartpullerNotActivatedException;
 import com.hitesh.cartpuller2.cartpuller.exception.CartpullerOrderAlreadyAcceptedException;
 import com.hitesh.cartpuller2.cartpuller.exception.CartpullerDeactivationFailedException;
@@ -16,6 +18,7 @@ import com.hitesh.cartpuller2.global.dto.Location;
 import com.hitesh.cartpuller2.order.Order;
 import com.hitesh.cartpuller2.order.OrderService;
 import com.hitesh.cartpuller2.order.OrderStatus;
+import com.hitesh.cartpuller2.order.dto.OrderDto;
 import com.hitesh.cartpuller2.service.HelperService;
 import com.hitesh.cartpuller2.user.User;
 import com.hitesh.cartpuller2.user.service.UserService;
@@ -53,13 +56,16 @@ public class CartpullerService {
 
         final User user = userService.getUserByEmail(email);
 
+        double x = Double.parseDouble(location.getLongitude());
+        double y = Double.parseDouble(location.getLatitude());
+        GeoJsonPoint locGeoJsonPoint = new GeoJsonPoint(x, y);
+
         ActiveCartpuller cartpuller = new ActiveCartpuller(email,
                 new Date(),
                 user.getName(),
                 user.getPhoneNumber(),
                 user.getAddress(),
-                location.getLongitude(),
-                location.getLatitude());
+                locGeoJsonPoint);
 
         activeCartpullerRepository.save(cartpuller);
 
@@ -88,8 +94,11 @@ public class CartpullerService {
             ActiveCartpuller oldCartpuller = optionalCartpuller.get();
             activeCartpullerRepository.delete(oldCartpuller);
 
-            oldCartpuller.setLongitude(location.getLongitude());
-            oldCartpuller.setLatitude(location.getLatitude());
+            double x = Double.parseDouble(location.getLongitude());
+            double y = Double.parseDouble(location.getLatitude());
+            GeoJsonPoint locGeoJsonPoint = new GeoJsonPoint(x, y);
+
+            oldCartpuller.setLocation(locGeoJsonPoint);
             ActiveCartpuller newCartpuller = oldCartpuller;
             activeCartpullerRepository.insert(newCartpuller);
 
@@ -99,7 +108,7 @@ public class CartpullerService {
         }
     }
 
-    public List<OrderDto> getOrdersIfActive(HttpServletRequest request) {
+    public List<CartpullerOrderDto> getOrdersIfActive(HttpServletRequest request) {
 
         final String email = helperService.getEmailFromRequest(request);
 
@@ -107,27 +116,27 @@ public class CartpullerService {
             throw new CartpullerNotActivatedException("Please activate your store in app to get orders");
         }
 
-        List<Order> orders = orderService.getByOrderStatus(OrderStatus.SENT);
-        List<OrderDto> ordersDto = new ArrayList<>();
-        for (Order order : orders) {
+        List<OrderDto> orders = orderService.getByOrderStatus(OrderStatus.SENT);
+        List<CartpullerOrderDto> ordersDto = new ArrayList<>();
+        for (OrderDto order : orders) {
             ordersDto.add(getOrderDtoFromOrder(order));
         }
         return ordersDto;
     }
 
-    public List<OrderDto> getCartpullerPastOrders(HttpServletRequest request) {
+    public List<CartpullerOrderDto> getCartpullerPastOrders(HttpServletRequest request) {
         // if an order has cartpuller email that means it was accepted
         final String email = helperService.getEmailFromRequest(request);
 
-        List<Order> orders = orderService.getOrderByCartpullerEmail(email);
-        List<OrderDto> ordersDto = new ArrayList<>();
-        for (Order order : orders) {
+        List<OrderDto> orders = orderService.getOrderByCartpullerEmail(email);
+        List<CartpullerOrderDto> ordersDto = new ArrayList<>();
+        for (OrderDto order : orders) {
             ordersDto.add(getOrderDtoFromOrder(order));
         }
         return ordersDto;
     }
 
-    public OrderDto acceptOrderIfActive(HttpServletRequest request, String orderId) {
+    public CartpullerOrderDto acceptOrderIfActive(HttpServletRequest request, String orderId) {
 
         final String cartpullerEmail = helperService.getEmailFromRequest(request);
 
@@ -146,7 +155,7 @@ public class CartpullerService {
         order.setCartpullerEmail(cartpullerEmail);
         order.setOrderStatus(OrderStatus.ACCEPTED);
 
-        Order updatedOrder = orderService.updateOrder(order);
+        OrderDto updatedOrder = orderService.updateOrder(order);
 
         return getOrderDtoFromOrder(updatedOrder);
 
@@ -156,12 +165,12 @@ public class CartpullerService {
         return activeCartpullerRepository.findByEmail(email).isPresent();
     }
 
-    public ActiveCartpuller getActiveCartpuller(String email) {
-        return activeCartpullerRepository.findByEmail(email).get();
+    public ActiveCartpullerDto getActiveCartpuller(String email) {
+        return toActiveCartpullerDto(activeCartpullerRepository.findByEmail(email).get());
     }
 
-    private OrderDto getOrderDtoFromOrder(Order order) {
-        return new OrderDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
+    private CartpullerOrderDto getOrderDtoFromOrder(OrderDto order) {
+        return new CartpullerOrderDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
                 order.getOrderStatus());
     }
 
@@ -173,4 +182,23 @@ public class CartpullerService {
             return new Activity(false);
         }
     }
+
+    public ActiveCartpullerDto toActiveCartpullerDto(ActiveCartpuller activeCartpuller) {
+        if (activeCartpuller == null) {
+            return null;
+        }
+
+        ActiveCartpullerDto dto = new ActiveCartpullerDto(activeCartpuller.getEmail());
+        dto.setId(activeCartpuller.getId());
+        dto.setStartedOn(activeCartpuller.getStartedOn());
+        dto.setName(activeCartpuller.getName());
+        dto.setPhoneNumber(activeCartpuller.getPhoneNumber());
+        dto.setAddress(activeCartpuller.getAddress());
+
+        dto.setLongitude(String.valueOf(activeCartpuller.getLocation().getX()));
+        dto.setLatitude(String.valueOf(activeCartpuller.getLocation().getY()));
+
+        return dto;
+    }
+
 }

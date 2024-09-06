@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hitesh.cartpuller2.cartpuller.dto.OrderDto;
+import com.hitesh.cartpuller2.cartpuller.dto.CartpullerOrderDto;
 import com.hitesh.cartpuller2.global.dto.Activity;
 import com.hitesh.cartpuller2.global.dto.Location;
 
@@ -55,17 +55,18 @@ public class CartpullerController {
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<List<OrderDto>> getOrders(HttpServletRequest request) {
+    public ResponseEntity<List<CartpullerOrderDto>> getOrders(HttpServletRequest request) {
         return ResponseEntity.ok(cartpullerService.getOrdersIfActive(request));
     }
 
     @GetMapping("/past-accepted-orders")
-    public ResponseEntity<List<OrderDto>> getPastAcceptedOrders(HttpServletRequest request) {
+    public ResponseEntity<List<CartpullerOrderDto>> getPastAcceptedOrders(HttpServletRequest request) {
         return ResponseEntity.ok(cartpullerService.getCartpullerPastOrders(request));
     }
 
     @PostMapping("/accept-order/{orderId}")
-    public ResponseEntity<OrderDto> acceptCartpullerOrder(HttpServletRequest request, @PathVariable String orderId) {
+    public ResponseEntity<CartpullerOrderDto> acceptCartpullerOrder(HttpServletRequest request,
+            @PathVariable String orderId) {
         return ResponseEntity.ok(cartpullerService.acceptOrderIfActive(request, orderId));
     }
 

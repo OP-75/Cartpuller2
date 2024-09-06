@@ -6,15 +6,17 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
-
-import com.hitesh.cartpuller2.cartpuller.ActiveCartpuller;
 import com.hitesh.cartpuller2.cartpuller.CartpullerService;
+import com.hitesh.cartpuller2.cartpuller.dto.ActiveCartpullerDto;
 import com.hitesh.cartpuller2.global.dto.Activity;
 import com.hitesh.cartpuller2.global.dto.Location;
 import com.hitesh.cartpuller2.order.Order;
 import com.hitesh.cartpuller2.order.OrderService;
 import com.hitesh.cartpuller2.order.OrderStatus;
+import com.hitesh.cartpuller2.order.dto.OrderDto;
+import com.hitesh.cartpuller2.rider.dto.ActiveRiderDto;
 import com.hitesh.cartpuller2.rider.dto.DetailedOrderDto;
 import com.hitesh.cartpuller2.rider.dto.RedactedOrderDto;
 import com.hitesh.cartpuller2.rider.exception.AuthorizationException;
@@ -41,8 +43,8 @@ public class RiderService {
     private final ActiveRiderRepository activeRiderRepository;
     private final CartpullerService cartpullerService;
 
-    public ActiveRider getActiveRiderByEmail(String email) {
-        return activeRiderRepository.findByEmail(email).get();
+    public ActiveRiderDto getActiveRiderByEmail(String email) {
+        return toActiveRiderDto(activeRiderRepository.findByEmail(email).get());
     }
 
     public void activateRider(Location location, HttpServletRequest request) {
@@ -63,13 +65,16 @@ public class RiderService {
 
         final User user = userService.getUserByEmail(email);
 
+        double x = Double.parseDouble(location.getLongitude());
+        double y = Double.parseDouble(location.getLatitude());
+        GeoJsonPoint locGeoJsonPoint = new GeoJsonPoint(x, y);
+
         ActiveRider cartpuller = new ActiveRider(email,
                 new Date(),
                 user.getName(),
                 user.getPhoneNumber(),
                 user.getAddress(),
-                location.getLongitude(),
-                location.getLatitude());
+                locGeoJsonPoint);
 
         activeRiderRepository.save(cartpuller);
 
@@ -93,14 +98,18 @@ public class RiderService {
 
         Optional<ActiveRider> optionalCartpuller = activeRiderRepository.findByEmail(email);
         if (optionalCartpuller.isPresent()) {
-            // get old cartpuller and delete it, then save new cart puller with location
+            // get old rider and delete it, then save new rider with location
             ActiveRider oldRider = optionalCartpuller.get();
             activeRiderRepository.delete(oldRider);
 
-            oldRider.setLongitude(location.getLongitude());
-            oldRider.setLatitude(location.getLatitude());
-            ActiveRider newCartpuller = oldRider;
-            activeRiderRepository.insert(newCartpuller);
+            double x = Double.parseDouble(location.getLongitude());
+            double y = Double.parseDouble(location.getLatitude());
+            GeoJsonPoint locGeoJsonPoint = new GeoJsonPoint(x, y);
+
+            oldRider.setLocation(locGeoJsonPoint);
+
+            // oldRider is now updated
+            activeRiderRepository.insert(oldRider);
 
             return;
         } else {
@@ -124,9 +133,9 @@ public class RiderService {
             throw new RiderInactiveException("Please activate get orders");
         }
 
-        List<Order> orders = orderService.getByOrderStatus(OrderStatus.ACCEPTED);
+        List<OrderDto> orders = orderService.getByOrderStatus(OrderStatus.ACCEPTED);
         List<DetailedOrderDto> ordersDto = new ArrayList<>();
-        for (Order order : orders) {
+        for (OrderDto order : orders) {
             ordersDto.add(getRiderOrderDetailedDto(order));
         }
         return ordersDto;
@@ -135,10 +144,10 @@ public class RiderService {
     public List<RedactedOrderDto> getPastOrders(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
-        List<Order> orders = orderService.getOrderByRiderEmail(email);
+        List<OrderDto> orders = orderService.getOrderByRiderEmail(email);
 
         List<RedactedOrderDto> ordersDto = new ArrayList<>();
-        for (Order order : orders) {
+        for (OrderDto order : orders) {
             ordersDto.add(getRiderOrderRedactedDto(order));
         }
         return ordersDto;
@@ -162,7 +171,7 @@ public class RiderService {
         order.setRiderEmail(riderEmail);
         order.setOrderStatus(OrderStatus.RIDER_ASSIGNED);
 
-        Order updatedOrder = orderService.updateOrder(order);
+        OrderDto updatedOrder = orderService.updateOrder(order);
 
         return getRiderOrderDetailedDto(updatedOrder);
 
@@ -173,9 +182,9 @@ public class RiderService {
         // or DELIVERY_IN_PROGRESS, before returning
 
         String riderEmail = helperService.getEmailFromRequest(request);
-        Order order;
+        OrderDto order;
         try {
-            order = orderService.getByOrderId(orderId);
+            order = orderService.getDtoByOrderId(orderId);
         } catch (NoSuchElementException e) {
             throw new BadRequestException("No order can be found with the given ID");
         }
@@ -206,7 +215,7 @@ public class RiderService {
 
         order.setOrderStatus(OrderStatus.DELIVERY_IN_PROGRESS);
 
-        Order updatedOrder = orderService.updateOrder(order);
+        OrderDto updatedOrder = orderService.updateOrder(order);
 
         return getRiderOrderDetailedDto(updatedOrder);
 
@@ -227,23 +236,46 @@ public class RiderService {
 
         order.setOrderStatus(OrderStatus.DELIVERED);
 
-        Order updatedOrder = orderService.updateOrder(order);
+        OrderDto updatedOrder = orderService.updateOrder(order);
 
         return getRiderOrderRedactedDto(updatedOrder);
 
     }
 
+    public ActiveRiderDto toActiveRiderDto(ActiveRider activeRider) {
+        if (activeRider == null) {
+            return null;
+        }
+
+        ActiveRiderDto dto = new ActiveRiderDto(activeRider.getEmail());
+        dto.setId(activeRider.getId());
+        dto.setStartedOn(activeRider.getStartedOn());
+        dto.setName(activeRider.getName());
+        dto.setPhoneNumber(activeRider.getPhoneNumber());
+        dto.setAddress(activeRider.getAddress());
+
+        if (activeRider.getLocation() != null) {
+            dto.setLongitude(String.valueOf(activeRider.getLocation().getX()));
+            dto.setLatitude(String.valueOf(activeRider.getLocation().getY()));
+        } else {
+            dto.setLongitude(null);
+            dto.setLatitude(null);
+        }
+
+        return dto;
+    }
+
     // ----------------private methods-----------------------
-    private RedactedOrderDto getRiderOrderRedactedDto(Order order) {
+    private RedactedOrderDto getRiderOrderRedactedDto(OrderDto order) {
         return new RedactedOrderDto(order.getId(), order.getOrderStatus());
     }
 
-    private DetailedOrderDto getRiderOrderDetailedDto(Order order) {
+    private DetailedOrderDto getRiderOrderDetailedDto(OrderDto order) {
 
         User customer = userService.getUserByEmail(order.getCustomerEmail());
         User cartpuller = userService.getUserByEmail(order.getCartpullerEmail());
         // for cartpuller location
-        ActiveCartpuller activeCartpullerDetails = cartpullerService.getActiveCartpuller(order.getCartpullerEmail());
+        ActiveCartpullerDto activeCartpullerDetails = cartpullerService.getActiveCartpuller(order.getCartpullerEmail());
 
         return new DetailedOrderDto(order.getId(), order.getOrderDetails(), order.getVegetableDetailMap(),
                 order.getOrderStatus(), customer.getPhoneNumber(), customer.getName(), cartpuller.getPhoneNumber(),

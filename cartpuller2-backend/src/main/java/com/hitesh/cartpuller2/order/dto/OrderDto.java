@@ -1,23 +1,25 @@
-package com.hitesh.cartpuller2.order;
+package com.hitesh.cartpuller2.order.dto;
 
 import java.util.*;
 
-import java.io.Serializable;
-
-import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
+import java.io.Serializable;
 import com.hitesh.cartpuller2.vegetable.Vegetable;
+import com.hitesh.cartpuller2.order.OrderStatus;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
-@Document(collection = "Orders")
-public class Order implements Serializable {
+public class OrderDto implements Serializable {
+
+    // ! This is created do that i dont have to make changes in frontend for
+    // ! deliveryLongitude, deliveryLatitude
 
     @Id
     @MongoId
@@ -33,8 +35,7 @@ public class Order implements Serializable {
     private String cartpullerEmail;
 
     private String deliveryAddress;
-
-    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
-    private GeoJsonPoint deliveryLocation;
+    private String deliveryLatitude;
+    private String deliveryLongitude;
 
 }

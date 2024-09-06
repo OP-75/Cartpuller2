@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
     //we need to do polling every X seconds to refresh available order,
     //we can just use empty set state since the future builder in build()
     // will make the call every time build is called
-    _timer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+    _timer = Timer.periodic(const Duration(seconds: 10), (Timer t) {
       setState(() {});
     });
   }
