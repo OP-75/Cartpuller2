@@ -42,6 +42,7 @@ public class RiderService {
     private final HelperService helperService;
     private final ActiveRiderRepository activeRiderRepository;
     private final CartpullerService cartpullerService;
+    private final double maxDistance = 4000;
 
     public ActiveRiderDto getActiveRiderByEmail(String email) {
         return toActiveRiderDto(activeRiderRepository.findByEmail(email).get());
@@ -129,11 +130,13 @@ public class RiderService {
     public List<DetailedOrderDto> getOrdersIfActive(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
-        if (!isRiderActive(email)) {
+        Optional<ActiveRider> rider = getRider(email);
+        if (!rider.isPresent()) {
             throw new RiderInactiveException("Please activate get orders");
         }
 
-        List<OrderDto> orders = orderService.getByOrderStatus(OrderStatus.ACCEPTED);
+        List<OrderDto> orders = orderService.getOrderDtosByLocationAndStatus(rider.get().getLocation(), maxDistance,
+                OrderStatus.ACCEPTED);
         List<DetailedOrderDto> ordersDto = new ArrayList<>();
         for (OrderDto order : orders) {
             ordersDto.add(getRiderOrderDetailedDto(order));
@@ -285,6 +288,10 @@ public class RiderService {
 
     private boolean isRiderActive(String email) {
         return activeRiderRepository.findByEmail(email).isPresent();
+    }
+
+    private Optional<ActiveRider> getRider(String email) {
+        return activeRiderRepository.findByEmail(email);
     }
 
 }

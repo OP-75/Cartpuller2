@@ -15,4 +15,6 @@ db.Vegetables.insertMany([
 ]);
 
 //added later, check if it throws ant error
-db.collection.createIndex( { deliveryLocation : "2dsphere" } )
+db.Orders.createIndex( { deliveryLocation : "2dsphere" } )
+db.Active_Cartpullers.createIndex( { location : "2dsphere" } )
+db.Active_Riders.createIndex( { location : "2dsphere" } )

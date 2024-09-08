@@ -127,8 +127,10 @@ class _SignupPageState extends State<SignupPage> {
                     'Sign up',
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
-                  onPressed: () {
-                    handleSignup(context);
+                  onPressed: () async {
+                    developer.log("Signup callback");
+                    await handleSignup(context);
+                    developer.log("Signup callback end");
                   },
                 ),
               ),
@@ -163,22 +165,26 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  void handleSignup(BuildContext context) async {
+  Future<void> handleSignup(BuildContext context) async {
     _error = null;
 
-    Position currPosition = await determinePosition();
-
-    Map<String, String> signupForm = {
-      "email": emailController.text,
-      "password": passwordController.text,
-      "name": nameController.text,
-      "phoneNumber": phoneNumberController.text,
-      "address": addressController.text,
-      "longitude": currPosition.longitude.toString(),
-      "latitude": currPosition.latitude.toString(),
-    };
-
     try {
+      developer.log("start of handleSignup()");
+
+      Position currPosition = await determinePosition();
+
+      developer.log(currPosition.toString());
+
+      Map<String, String> signupForm = {
+        "email": emailController.text,
+        "password": passwordController.text,
+        "name": nameController.text,
+        "phoneNumber": phoneNumberController.text,
+        "address": addressController.text,
+        "longitude": currPosition.longitude.toString(),
+        "latitude": currPosition.latitude.toString(),
+      };
+      developer.log(signupForm.toString());
       Map<String, dynamic> response = await signup(signupForm);
       developer.log(response.toString());
       if (response.containsKey("error")) {

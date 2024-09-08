@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +63,13 @@ public class OrderService {
 
     public OrderDto getDtoByOrderId(String id) {
         return getOrderDto(orderRepository.findById(id).orElseThrow());
+    }
+
+    public List<OrderDto> getOrderDtosByLocationAndStatus(GeoJsonPoint nearLocation, double distanceInMeters,
+            OrderStatus status) {
+        return orderRepository.findByLocationNearAndOrderStatus(nearLocation, distanceInMeters, status).stream()
+                .map((order) -> getOrderDto(order))
+                .collect(Collectors.toList());
     }
 
     public List<OrderDto> getOrderByCartpullerEmail(String cartpullerEmail) {

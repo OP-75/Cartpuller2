@@ -36,6 +36,7 @@ public class CartpullerService {
     private final OrderService orderService;
     private final HelperService helperService;
     private final ActiveCartpullerRepository activeCartpullerRepository;
+    private final double maxDistance = 2000;
 
     public void activateCartpuller(Location location, HttpServletRequest request) {
 
@@ -112,11 +113,17 @@ public class CartpullerService {
 
         final String email = helperService.getEmailFromRequest(request);
 
-        if (!isCartpullerActive(email)) {
+        Optional<ActiveCartpuller> activeCartpuller = getCartpuller(email);
+
+        if (!activeCartpuller.isPresent()) {
             throw new CartpullerNotActivatedException("Please activate your store in app to get orders");
         }
 
-        List<OrderDto> orders = orderService.getByOrderStatus(OrderStatus.SENT);
+        // List<OrderDto> orders = orderService.getByOrderStatus(OrderStatus.SENT);
+        List<OrderDto> orders = orderService.getOrderDtosByLocationAndStatus(activeCartpuller.get().getLocation(),
+                maxDistance,
+                OrderStatus.SENT);
+
         List<CartpullerOrderDto> ordersDto = new ArrayList<>();
         for (OrderDto order : orders) {
             ordersDto.add(getOrderDtoFromOrder(order));
@@ -163,6 +170,10 @@ public class CartpullerService {
 
     public boolean isCartpullerActive(String email) {
         return activeCartpullerRepository.findByEmail(email).isPresent();
+    }
+
+    public Optional<ActiveCartpuller> getCartpuller(String email) {
+        return activeCartpullerRepository.findByEmail(email);
     }
 
     public ActiveCartpullerDto getActiveCartpuller(String email) {

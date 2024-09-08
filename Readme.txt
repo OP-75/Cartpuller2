@@ -2,8 +2,10 @@ Making any changes related to flutter_background_services requires u to stop the
 
 Start these services first: MongoDB, redis, before starting server
 
+
 Build backend:
-docker compose up --build
+1. Run maven clean & maven install commands in the cartpuller2-backend directory
+2. docker compose up --build
 
 Launch flutter apps in debug more or use `flutter build apk` to build an apk
 Note: if there are any errors with flutter try `flutter clean` & `flutter run` cmds or use `flutter doctor` to see if flutter has all the dependencies installed

@@ -2,12 +2,8 @@ Implement Caching for Updating (CachePut) Cartpuller & Rider location as well as
 
 Make assgining of order like old app (every 30s the next nearest cartpuller will get the order for grabs, we can do this by making a table and running a backround function and this table will have cartpullerID : List<Order> Map)
 
-(Done but only for Order object also NEED TO TEST!!!) Instead of putting 2 strings longitude&latitide use `Point` Object, this will allow us to make geo-spatial queries in mongo
+(Cancelled - if it works dont break it) Inside timer (started in init()) instead of calling setState() periodically and refreshing the build() method with future builder, use stream builder (in cartpuller & especially rider app)
 
-Inside timer (started in init()) instead of calling setState() periodically and refreshing the build() method with future builder, use stream builder (in cartpuller & especially rider app)
-
-Use geolocator to update position every time position changes instead of every x seconds
-
-Ngrok throttles connections per minute try switching to localtunnel.me or throttle the `Timers` use for polling in all the apps 
+(Done but might need to do more if it breaks again) Ngrok throttles connections per minute try switching to localtunnel.me or throttle the `Timers` use for polling in all the apps 
 
 (Optional & hard) Distributed sourcing: allow sourcing of goods from multiple vendors to fulfil a order

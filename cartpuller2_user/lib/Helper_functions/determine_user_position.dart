@@ -38,5 +38,13 @@ Future<Position> determinePosition() async {
 
   // When we reach here, permissions are granted and we can
   // continue accessing the position of the device.
-  return await Geolocator.getCurrentPosition();
+
+  //! Sometimes Geolocator.getCurrentPosition() has problems and takes many MINUTES to get location. So just use below method
+  Position? lastKnownPosition = await Geolocator.getLastKnownPosition();
+
+  if (lastKnownPosition == null) {
+    return await Geolocator.getCurrentPosition();
+  } else {
+    return lastKnownPosition;
+  }
 }
