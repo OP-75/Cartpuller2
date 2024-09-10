@@ -9,3 +9,6 @@ Can improve Cache Evict strategy in Order Service but current caching is good en
 (Done but might need to do more if it breaks again) Ngrok throttles connections per minute try switching to localtunnel.me or throttle the `Timers` use for polling in all the apps 
 
 (Optional & hard) Distributed sourcing: allow sourcing of goods from multiple vendors to fulfil a order
+
+Make one more folder cartpuller2-deployment in it make a single docker file that pulls the latest backend code from github 
+and build the backend using docker compose inside the docker container 
