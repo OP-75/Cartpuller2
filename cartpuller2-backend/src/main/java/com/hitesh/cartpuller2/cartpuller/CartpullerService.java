@@ -5,8 +5,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.hitesh.cartpuller2.cartpuller.dto.ActiveCartpullerDto;
 import com.hitesh.cartpuller2.cartpuller.dto.CartpullerOrderDto;
@@ -34,10 +38,11 @@ public class CartpullerService {
 
     private final UserService userService;
     private final OrderService orderService;
-    private final HelperService helperService;
+    public final HelperService helperService;
     private final ActiveCartpullerRepository activeCartpullerRepository;
     private final double maxDistance = 2000;
 
+    @Transactional
     public void activateCartpuller(Location location, HttpServletRequest request) {
 
         final String email = helperService.getEmailFromRequest(request);
@@ -72,6 +77,10 @@ public class CartpullerService {
 
     }
 
+    @Transactional
+    @CacheEvict(value = "activeCartpullerDto", key = "#root.target.helperService.getEmailFromRequest(#request)")
+    // #root.method, #root.target, and #root.caches for references to the method,
+    // target object, and affected cache(s) respectively.
     public void deactivateCartpuller(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
@@ -85,7 +94,9 @@ public class CartpullerService {
         }
     }
 
-    public void updateCartpullerLocation(Location location, HttpServletRequest request) {
+    // `#result` for a reference to the result of the method invocation
+    @CachePut(value = "activeCartpullerDto", key = "#result.email")
+    public ActiveCartpullerDto updateCartpullerLocation(Location location, HttpServletRequest request) {
 
         final String email = helperService.getEmailFromRequest(request);
 
@@ -103,7 +114,7 @@ public class CartpullerService {
             ActiveCartpuller newCartpuller = oldCartpuller;
             activeCartpullerRepository.insert(newCartpuller);
 
-            return;
+            return toActiveCartpullerDto(newCartpuller);
         } else {
             throw new CartpullerNotActivatedException("Cartpuller is inactive");
         }
@@ -171,12 +182,20 @@ public class CartpullerService {
         return activeCartpullerRepository.findByEmail(email).isPresent();
     }
 
-    public Optional<ActiveCartpuller> getCartpuller(String email) {
-        return activeCartpullerRepository.findByEmail(email);
+    @Cacheable(value = "activeCartpullerDto", key = "#email")
+    public ActiveCartpullerDto getActiveCartpuller(String email) {
+
+        Optional<ActiveCartpuller> cartpuller = activeCartpullerRepository.findByEmail(email);
+
+        if (cartpuller.isPresent()) {
+            return toActiveCartpullerDto(cartpuller.get());
+        } else {
+            return new ActiveCartpullerDto(email);
+        }
     }
 
-    public ActiveCartpullerDto getActiveCartpuller(String email) {
-        return toActiveCartpullerDto(activeCartpullerRepository.findByEmail(email).get());
+    private Optional<ActiveCartpuller> getCartpuller(String email) {
+        return activeCartpullerRepository.findByEmail(email);
     }
 
     private CartpullerOrderDto getOrderDtoFromOrder(OrderDto order) {

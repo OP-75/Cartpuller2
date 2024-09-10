@@ -1,12 +1,14 @@
 package com.hitesh.cartpuller2.cartpuller.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import lombok.Data;
 
 @Data
-public class ActiveCartpullerDto {
+// implements Serializable for caching
+public class ActiveCartpullerDto implements Serializable {
     // ! This was made since location is now `GeoJsonPoint` but frontend app works
     // ! with `longitude` & `latitude` strings
 
