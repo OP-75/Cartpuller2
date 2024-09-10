@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
@@ -97,8 +98,10 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    @CacheEvict(value = { "orderOfCustomers", "orderOfRiders", "orderOfCartpullers", "orderDtos", "orders",
-            "ordersByStatus" }, allEntries = true)
+    @CacheEvict(value = { "orderOfCustomers", "orderOfRiders", "orderOfCartpullers", "orders", "ordersByStatus"
+
+    }, allEntries = true)
+    @CachePut(value = "orderDtos", key = "#result.id")
     @Transactional
     public OrderDto updateOrder(Order newOrder) {
         // since repository has no way to update order we will delete and then save new

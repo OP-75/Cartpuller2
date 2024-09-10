@@ -1,12 +1,14 @@
 package com.hitesh.cartpuller2.rider.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import lombok.Data;
 
 @Data
-public class ActiveRiderDto {
+// implements Serializable for caching
+public class ActiveRiderDto implements Serializable {
 
     @Id
     @MongoId

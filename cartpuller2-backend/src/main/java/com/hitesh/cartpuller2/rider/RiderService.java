@@ -6,8 +6,13 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.hitesh.cartpuller2.cartpuller.CartpullerService;
 import com.hitesh.cartpuller2.cartpuller.dto.ActiveCartpullerDto;
 import com.hitesh.cartpuller2.global.dto.Activity;
@@ -39,11 +44,12 @@ public class RiderService {
 
     private final UserService userService;
     private final OrderService orderService;
-    private final HelperService helperService;
+    public final HelperService helperService;
     private final ActiveRiderRepository activeRiderRepository;
     private final CartpullerService cartpullerService;
     private final double maxDistance = 4000;
 
+    @Cacheable(value = "activeRiderDto", key = "#email")
     public ActiveRiderDto getActiveRiderByEmail(String email) {
         return toActiveRiderDto(activeRiderRepository.findByEmail(email).get());
     }
@@ -81,6 +87,10 @@ public class RiderService {
 
     }
 
+    @Transactional
+    @CacheEvict(value = "activeRiderDto", key = "#root.target.helperService.getEmailFromRequest(#request)")
+    // #root.method, #root.target, and #root.caches for references to the method,
+    // target object, and affected cache(s) respectively.
     public void deactivateRider(HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
@@ -94,7 +104,10 @@ public class RiderService {
         }
     }
 
-    public void updateRiderLocation(Location location, HttpServletRequest request) {
+    @Transactional
+    @CachePut(value = "activeRiderDto", key = "#result.email")
+    // `#result` for a reference to the result of the method invocation
+    public ActiveRiderDto updateRiderLocation(Location location, HttpServletRequest request) {
         final String email = helperService.getEmailFromRequest(request);
 
         Optional<ActiveRider> optionalCartpuller = activeRiderRepository.findByEmail(email);
@@ -112,7 +125,7 @@ public class RiderService {
             // oldRider is now updated
             activeRiderRepository.insert(oldRider);
 
-            return;
+            return toActiveRiderDto(oldRider);
         } else {
             throw new RiderInactiveException("Rider is inactive");
         }

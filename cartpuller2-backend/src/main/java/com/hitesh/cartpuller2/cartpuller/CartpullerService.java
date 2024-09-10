@@ -94,8 +94,9 @@ public class CartpullerService {
         }
     }
 
-    // `#result` for a reference to the result of the method invocation
+    @Transactional
     @CachePut(value = "activeCartpullerDto", key = "#result.email")
+    // `#result` for a reference to the result of the method invocation
     public ActiveCartpullerDto updateCartpullerLocation(Location location, HttpServletRequest request) {
 
         final String email = helperService.getEmailFromRequest(request);
