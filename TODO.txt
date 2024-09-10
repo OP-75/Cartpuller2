@@ -1,4 +1,6 @@
-Implement Caching for Updating (CachePut) Cartpuller & Rider location as well as for Getting them (Cache)
+(implemented for order service but not much improvement in performance(reduces api call time by ~10ms) probably caz DB only has few documents, 
+will try for active cartpuller & active riders)Implement Caching for Updating (CachePut) Cartpuller & 
+Rider location as well as for Getting them (Cache)
 
 (Scrapped since the project is taking too long, but instead of this we can have fields like `Carpuller search radius` & `rider search radius` in `Order`)Make assgining of order like old app (every 30s the next nearest cartpuller will get the order for grabs, we can do this by making a table and running a backround function and this table will have cartpullerID : List<Order> Map)
 
