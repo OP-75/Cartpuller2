@@ -119,7 +119,6 @@ public class CartpullerService {
             throw new CartpullerNotActivatedException("Please activate your store in app to get orders");
         }
 
-        // List<OrderDto> orders = orderService.getByOrderStatus(OrderStatus.SENT);
         List<OrderDto> orders = orderService.getOrderDtosByLocationAndStatus(activeCartpuller.get().getLocation(),
                 maxDistance,
                 OrderStatus.SENT);

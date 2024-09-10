@@ -21,8 +21,8 @@ Bug: Ngrok throttles the connections per minute so you might encounter an error 
 Order Flow:
 
 SENT 
-  -> ACCEPTED (Accepted by cartpuller)
-  -> RIDER_ASSIGNED (Rider is assigned, but order is not picked up by rider)
+  -> ACCEPTED (Accepted by a cartpuller within 2km)
+  -> RIDER_ASSIGNED (Rider is assigned within 4km, but order is not picked up by rider)
   -> DELIVERY_IN_PROGRESS (Rider has picked up the order from cartpuller; cartpuller is no longer involved in fulfilling the order)
   -> DELIVERED (Order has been delivered to the customer)
 
