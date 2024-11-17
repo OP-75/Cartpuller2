@@ -1,9 +1,16 @@
 Making any changes related to flutter_background_services requires u to stop the app and run/rebuild it again. Hot reload & Hot restart dont work with it
 
-Start these services first: MongoDB, redis, before starting server
+Start these services first for debug: MongoDB, redis, before starting server
+
+To start redis:
+Open WSL ubuntu terminal in VS code
+sudo service redis-server start
+redis-cli
+flushall (inside redis cli)
+monitor (inside redis cli)
 
 
-Build backend:
+Build backend (using docker):
 1. Run maven clean & maven install commands in the cartpuller2-backend directory
 2. docker compose up --build
 
